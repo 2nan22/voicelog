@@ -14,6 +14,10 @@ dependencies:
   # STT
   speech_to_text: ^7.0.0
 
+  # On-Device LLM (Google MediaPipe — pub.dev: mediapipe_genai 0.0.1)
+  # 주의: flutter run 시 --enable-experiment=native-assets 플래그 필요
+  mediapipe_genai: ^0.0.1
+
   # 상태 관리
   flutter_riverpod: ^2.6.1
   riverpod_annotation: ^2.4.0
