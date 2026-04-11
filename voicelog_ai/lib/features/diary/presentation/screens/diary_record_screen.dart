@@ -6,9 +6,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:voicelog_ai/core/constants/dimensions.dart';
+import 'package:voicelog_ai/core/constants/prompts.dart';
 import 'package:voicelog_ai/core/constants/strings.dart';
+import 'package:voicelog_ai/core/utils/logger.dart';
+import 'package:voicelog_ai/features/diary/application/diary_process_provider.dart';
 import 'package:voicelog_ai/features/diary/application/diary_record_provider.dart';
+import 'package:voicelog_ai/features/diary/application/diary_repository_provider.dart';
+import 'package:voicelog_ai/features/diary/application/llm_provider.dart';
+import 'package:voicelog_ai/features/diary/domain/diary_entry.dart';
+import 'package:voicelog_ai/features/diary/presentation/widgets/diary_result_widget.dart';
 import 'package:voicelog_ai/features/diary/presentation/widgets/mic_button.dart';
+import 'package:voicelog_ai/features/diary/presentation/widgets/streaming_text_widget.dart';
 import 'package:voicelog_ai/features/diary/presentation/widgets/waveform_widget.dart';
 
 /// 음성 녹음 및 STT 결과 확인 화면.
@@ -25,11 +33,13 @@ class DiaryRecordScreen extends ConsumerStatefulWidget {
 class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     with TickerProviderStateMixin {
   Timer? _recordingTimer;
+  Timer? _inferenceTimer;
   int _elapsedSeconds = 0;
 
   @override
   void dispose() {
     _recordingTimer?.cancel();
+    _inferenceTimer?.cancel();
     super.dispose();
   }
 
@@ -51,18 +61,102 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
+  /// LLM 추론 30초 초과 시 경고 다이얼로그를 표시한다.
+  void _startInferenceTimer() {
+    _inferenceTimer?.cancel();
+    _inferenceTimer = Timer(const Duration(seconds: 30), () {
+      if (!mounted) return;
+      showDialog<void>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('처리 지연'),
+          content: const Text(AppStrings.errorTimeout),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('확인'),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  /// STT 원문을 LLM에 전달하여 스트리밍 처리를 실행한다.
+  ///
+  /// 청크마다 [DiaryProcessNotifier.appendChunk]를 호출하고,
+  /// 완료 시 [DiaryProcessNotifier.finalize]를 호출한 뒤 done 상태로 전환한다.
+  Future<void> _runLLMFlow(String rawText) async {
+    final service = ref.read(llmInferenceServiceProvider);
+    final processNotifier = ref.read(diaryProcessNotifierProvider.notifier);
+
+    if (!service.isReady) {
+      ref.read(diaryRecordNotifierProvider.notifier).setError();
+      return;
+    }
+
+    try {
+      final prompt = kDiaryProcessingPrompt.replaceAll('{raw_text}', rawText);
+      await for (final chunk in service.generateStream(prompt)) {
+        if (!mounted) return;
+        // 삭제 등으로 상태가 바뀌면 중단
+        if (ref.read(diaryRecordNotifierProvider) != RecordingState.processing) {
+          return;
+        }
+        processNotifier.appendChunk(chunk);
+      }
+      if (!mounted) return;
+      processNotifier.finalize();
+      _inferenceTimer?.cancel();
+      ref.read(diaryRecordNotifierProvider.notifier).finishRecording();
+    } catch (e) {
+      if (!mounted) return;
+      _inferenceTimer?.cancel();
+      AppLogger.error('LLM 처리 실패', e);
+      ref.read(diaryRecordNotifierProvider.notifier).setError();
+    }
+  }
+
   void _onDelete() {
+    _inferenceTimer?.cancel();
     try {
       ref.read(speechToTextServiceProvider).cancelListening();
     } catch (_) {}
     ref.read(diaryRecordNotifierProvider.notifier).reset();
     ref.read(sttTextNotifierProvider.notifier).clear();
+    ref.read(diaryProcessNotifierProvider.notifier).reset();
     _stopTimer();
     setState(() => _elapsedSeconds = 0);
   }
 
   Future<void> _onSave() async {
-    // Session 07에서 LLM 처리 연동 후 완성
+    final processState = ref.read(diaryProcessNotifierProvider);
+    final parsedResult = processState.parsedResult;
+    if (parsedResult == null) return;
+
+    final rawText = ref.read(sttTextNotifierProvider);
+    final entry = DiaryEntry.create(
+      rawText: rawText,
+      correctedText: parsedResult.correctedText,
+      emotion: parsedResult.emotion,
+      tags: parsedResult.tags,
+    );
+
+    try {
+      final repository = await ref.read(diaryRepositoryProvider.future);
+      await repository.save(entry);
+      if (!mounted) return;
+      ref.read(diaryRecordNotifierProvider.notifier).reset();
+      ref.read(sttTextNotifierProvider.notifier).clear();
+      ref.read(diaryProcessNotifierProvider.notifier).reset();
+      context.pop();
+    } catch (e) {
+      AppLogger.error('일기 저장 실패', e);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('저장에 실패했어요. 다시 시도해 주세요.')),
+      );
+    }
   }
 
   @override
@@ -71,13 +165,26 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     final sttText = ref.watch(sttTextNotifierProvider);
     final topPadding = MediaQuery.of(context).padding.top;
 
-    // RecordingState 변화를 감지하여 타이머를 자동 관리한다
+    // RecordingState 변화를 감지하여 타이머 및 LLM 흐름을 자동 관리한다
     ref.listen<RecordingState>(diaryRecordNotifierProvider, (prev, next) {
       if (prev != RecordingState.recording && next == RecordingState.recording) {
         _startTimer();
       } else if (prev == RecordingState.recording &&
           next != RecordingState.recording) {
         _stopTimer();
+      }
+      // processing 진입 시 LLM 스트리밍 시작
+      if (prev != RecordingState.processing &&
+          next == RecordingState.processing) {
+        final rawText = ref.read(sttTextNotifierProvider);
+        if (rawText.isNotEmpty) {
+          ref.read(diaryProcessNotifierProvider.notifier).reset();
+          _startInferenceTimer();
+          // ignore: discarded_futures
+          _runLLMFlow(rawText);
+        } else {
+          ref.read(diaryRecordNotifierProvider.notifier).finishRecording();
+        }
       }
     });
 
@@ -250,14 +357,16 @@ class _ScrollableContent extends StatelessWidget {
         right: AppDimensions.paddingMedium,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _DateHeader(),
+          const Center(child: _DateHeader()),
           const SizedBox(height: AppDimensions.paddingLarge),
-          _SttTextCard(
+          _DiaryContentCard(
             sttText: sttText,
             recordingState: recordingState,
           ),
+          const SizedBox(height: AppDimensions.paddingMedium),
+          const DiaryResultWidget(),
         ],
       ),
     );
@@ -303,10 +412,14 @@ class _DateHeader extends StatelessWidget {
   }
 }
 
-// ─── STT 텍스트 카드 ──────────────────────────────────────────────────────────
+// ─── 일기 콘텐츠 카드 (STT + 스트리밍 텍스트 통합) ──────────────────────────
 
-class _SttTextCard extends StatelessWidget {
-  const _SttTextCard({
+/// STT 원문과 LLM 스트리밍 텍스트를 하나의 카드에 표시한다.
+///
+/// - idle/recording: STT 텍스트 + 깜빡이는 커서
+/// - processing/done: STT 텍스트(흐리게) + LLM 스트리밍 텍스트
+class _DiaryContentCard extends ConsumerWidget {
+  const _DiaryContentCard({
     required this.sttText,
     required this.recordingState,
   });
@@ -315,7 +428,10 @@ class _SttTextCard extends StatelessWidget {
   final RecordingState recordingState;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isProcessingOrDone = recordingState == RecordingState.processing ||
+        recordingState == RecordingState.done;
+
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(minHeight: 180),
@@ -325,15 +441,33 @@ class _SttTextCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppDimensions.borderRadiusLg),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF000000).withValues(alpha:0.04),
+            color: const Color(0xFF000000).withValues(alpha: 0.04),
             blurRadius: 40,
             offset: const Offset(0, 12),
           ),
         ],
       ),
-      child: sttText.isEmpty
-          ? _buildPlaceholder(context)
-          : _buildText(context),
+      child: _buildContent(context, isProcessingOrDone),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, bool isProcessingOrDone) {
+    if (sttText.isEmpty && !isProcessingOrDone) {
+      return _buildPlaceholder(context);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (sttText.isNotEmpty) ...[
+          // STT 원문: processing/done 상태에서는 흐리게 표시
+          _buildSttText(context, isProcessingOrDone),
+          if (isProcessingOrDone)
+            const SizedBox(height: AppDimensions.paddingLarge),
+        ],
+        // LLM 스트리밍 텍스트 (processing/done 시 표시)
+        if (isProcessingOrDone) const StreamingTextWidget(),
+      ],
     );
   }
 
@@ -345,36 +479,43 @@ class _SttTextCard extends StatelessWidget {
         Icon(
           Icons.mic_none_rounded,
           size: 40,
-          color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha:0.3),
+          color: Theme.of(context)
+              .colorScheme
+              .onSurfaceVariant
+              .withValues(alpha: 0.3),
         ),
         const SizedBox(height: 12),
         Text(
           AppStrings.recordStart,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha:0.5),
-          ),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withValues(alpha: 0.5),
+              ),
         ),
         const SizedBox(height: AppDimensions.paddingMedium),
       ],
     );
   }
 
-  Widget _buildText(BuildContext context) {
+  Widget _buildSttText(BuildContext context, bool isDimmed) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Expanded(
           child: Text(
             sttText,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.3,
-              height: 1.5,
-              color: const Color(0xFF191C1E),
-            ),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  height: 1.6,
+                  color: isDimmed
+                      ? const Color(0xFF191C1E).withValues(alpha: 0.35)
+                      : const Color(0xFF191C1E),
+                ),
           ),
         ),
-        if (recordingState == RecordingState.recording)
+        if (!isDimmed && recordingState == RecordingState.recording)
           const _BlinkingCursor(),
       ],
     );
