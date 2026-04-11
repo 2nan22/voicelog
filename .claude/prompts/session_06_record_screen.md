@@ -9,9 +9,14 @@
 - `.claude/rules/state_management.md` (ConsumerWidget, ref.watch)
 
 ## UI 디자인 참고
-- **Google Stitch 디자인을 우선 참고한다.**
-- Stitch에서 내보낸 코드가 있으면 해당 코드의 레이아웃 구조와 컴포넌트를 최대한 반영한다.
-- Stitch 코드가 없으면 아래 가이드라인을 기본으로 구현한다.
+
+작업 전 아래 파일을 반드시 읽는다.
+
+- 디자인 시스템: `.claude/stitch/v0.0.1-20260411/seoul_minimalist/DESIGN.md`
+- 화면 목업 (HTML): `.claude/stitch/v0.0.1-20260411/diary_record_screen_new/code.html`
+- 화면 스크린샷: `.claude/stitch/v0.0.1-20260411/diary_record_screen_new/screen.png`
+
+HTML 목업의 레이아웃 구조와 컴포넌트를 최대한 반영하여 구현한다.
 
 ---
 

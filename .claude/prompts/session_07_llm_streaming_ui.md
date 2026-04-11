@@ -10,8 +10,14 @@ STT 완료 후 LLM 처리 흐름을 연결하고, 스트리밍 텍스트 및 감
 - `.claude/rules/performance.md` (Isolate, 발열 타이머)
 
 ## UI 디자인 참고
-- **Google Stitch 디자인을 우선 참고한다.**
-- 스트리밍 텍스트 출력 영역, 감정·태그 칩 배치, 저장 버튼 디자인은 Stitch 기준으로 구현한다.
+
+작업 전 아래 파일을 반드시 읽는다.
+
+- 디자인 시스템: `.claude/stitch/v0.0.1-20260411/seoul_minimalist/DESIGN.md`
+- 화면 목업 (HTML): `.claude/stitch/v0.0.1-20260411/diary_record_screen_new/code.html`
+- 화면 스크린샷: `.claude/stitch/v0.0.1-20260411/diary_record_screen_new/screen.png`
+
+스트리밍 텍스트 출력 영역, 감정·태그 칩 배치, 저장 버튼 디자인은 HTML 목업 기준으로 구현한다.
 
 ---
 

@@ -9,8 +9,14 @@
 - `.claude/rules/flutter_conventions.md` (async 에러 처리)
 
 ## UI 디자인 참고
-- **Google Stitch 디자인을 우선 참고한다.**
-- 일기 카드 레이아웃, 날짜 헤더, 감정 색상 인디케이터는 Stitch 기준으로 구현한다.
+
+작업 전 아래 파일을 반드시 읽는다.
+
+- 디자인 시스템: `.claude/stitch/v0.0.1-20260411/seoul_minimalist/DESIGN.md`
+- 화면 목업 (HTML): `.claude/stitch/v0.0.1-20260411/diary_list_screen_new/code.html`
+- 화면 스크린샷: `.claude/stitch/v0.0.1-20260411/diary_list_screen_new/screen.png`
+
+일기 카드 레이아웃, 날짜 헤더, 감정 색상 인디케이터는 HTML 목업 기준으로 구현한다.
 
 ---
 

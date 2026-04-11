@@ -9,8 +9,14 @@
 - `.claude/rules/ui_ux.md` (Material 3, 다크 모드)
 
 ## UI 디자인 참고
-- **Google Stitch 디자인을 우선 참고한다.**
-- 상세 화면의 헤더, 일기 본문 레이아웃, 감정·태그 배치는 Stitch 기준으로 구현한다.
+
+작업 전 아래 파일을 반드시 읽는다.
+
+- 디자인 시스템: `.claude/stitch/v0.0.1-20260411/seoul_minimalist/DESIGN.md`
+- 화면 목업 (HTML): `.claude/stitch/v0.0.1-20260411/diary_detail_screen_new/code.html`
+- 화면 스크린샷: `.claude/stitch/v0.0.1-20260411/diary_detail_screen_new/screen.png`
+
+상세 화면의 헤더, 일기 본문 레이아웃, 감정·태그 배치는 HTML 목업 기준으로 구현한다.
 
 ---
 
