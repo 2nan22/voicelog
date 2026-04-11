@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:voicelog_ai/core/constants/dimensions.dart';
 import 'package:voicelog_ai/core/constants/strings.dart';
 import 'package:voicelog_ai/features/diary/application/diary_record_provider.dart';
+import 'package:voicelog_ai/features/diary/presentation/widgets/mic_button.dart';
 import 'package:voicelog_ai/features/diary/presentation/widgets/waveform_widget.dart';
 
 /// 음성 녹음 및 STT 결과 확인 화면.
@@ -520,7 +521,7 @@ class _ControlsRow extends StatelessWidget {
           tooltip: AppStrings.deleteDiary,
           onTap: recordingState != RecordingState.idle ? onDelete : null,
         ),
-        const _MicButton(),
+        const MicButton(),
         const _SideButton(
           icon: Icons.check_rounded,
           tooltip: AppStrings.saveDiary,
@@ -574,88 +575,5 @@ class _SideButton extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-// ─── 마이크 버튼 ──────────────────────────────────────────────────────────────
-// 꼭지 3에서 lib/features/diary/presentation/widgets/mic_button.dart 로 분리 예정
-
-class _MicButton extends ConsumerWidget {
-  const _MicButton();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(diaryRecordNotifierProvider);
-    final isRecording = state == RecordingState.recording;
-    final isProcessing = state == RecordingState.processing;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return GestureDetector(
-      onTap: isProcessing ? null : () => _onTap(ref),
-      child: Container(
-        width: 96,
-        height: 96,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isRecording
-                ? [colorScheme.error, colorScheme.errorContainer]
-                : [colorScheme.primary, colorScheme.primaryContainer],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: (isRecording ? colorScheme.error : colorScheme.primary)
-                  .withValues(alpha:0.25),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: isProcessing
-            ? const Center(
-                child: SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2.5,
-                  ),
-                ),
-              )
-            : Icon(
-                isRecording ? Icons.pause_rounded : Icons.mic_rounded,
-                color: Colors.white,
-                size: 38,
-              ),
-      ),
-    );
-  }
-
-  Future<void> _onTap(WidgetRef ref) async {
-    final state = ref.read(diaryRecordNotifierProvider);
-    final sttService = ref.read(speechToTextServiceProvider);
-    final notifier = ref.read(diaryRecordNotifierProvider.notifier);
-    final sttNotifier = ref.read(sttTextNotifierProvider.notifier);
-
-    try {
-      if (state == RecordingState.idle) {
-        final granted = await sttService.initialize();
-        if (!granted) return;
-        notifier.startRecording();
-        await sttService.startListening(
-          onResult: (text, isFinal) {
-            sttNotifier.update(text);
-            if (isFinal) notifier.startProcessing();
-          },
-        );
-      } else if (state == RecordingState.recording) {
-        await sttService.stopListening();
-        notifier.startProcessing();
-      }
-    } catch (e) {
-      notifier.setError();
-    }
   }
 }
