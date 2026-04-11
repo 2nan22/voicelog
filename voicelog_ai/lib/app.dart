@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:voicelog_ai/core/theme/app_theme.dart';
+
 class VoicelogApp extends ConsumerWidget {
   const VoicelogApp({super.key});
 
@@ -8,7 +10,9 @@ class VoicelogApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'Voicelog AI',
-      theme: ThemeData(useMaterial3: true), // Session 02에서 교체
+      theme: buildLightTheme(),
+      darkTheme: buildDarkTheme(),
+      themeMode: ThemeMode.system,
       home: const Scaffold(
         body: Center(child: Text('Voicelog AI')),
       ),
