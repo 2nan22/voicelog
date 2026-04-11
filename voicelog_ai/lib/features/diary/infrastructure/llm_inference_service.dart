@@ -44,7 +44,10 @@ class MediaPipeLlmInferenceService implements ILlmInferenceService {
         _engine = LlmInferenceEngine(
           LlmInferenceOptions.gpu(
             modelPath: modelPath,
-            // maxTokens, topK 등 추가 파라미터는 mediapipe_genai API 업데이트에 따라 조정
+            maxTokens: 1024,
+            topK: 40,
+            temperature: 0.8,
+            sequenceBatchSize: 1, // 단일 대화 세션 기준
           ),
         );
         _isReady = true;
@@ -56,11 +59,16 @@ class MediaPipeLlmInferenceService implements ILlmInferenceService {
       }
     }
 
-    // CPU fallback
+    // CPU fallback — cacheDir: 컴파일된 모델 캐시 저장 경로
+    final cacheDir = await _getCacheDir();
     try {
       _engine = LlmInferenceEngine(
         LlmInferenceOptions.cpu(
           modelPath: modelPath,
+          cacheDir: cacheDir,
+          maxTokens: 1024,
+          topK: 40,
+          temperature: 0.8,
         ),
       );
       _isReady = true;
@@ -78,6 +86,12 @@ class MediaPipeLlmInferenceService implements ILlmInferenceService {
   Future<String> _getModelPath() async {
     final dir = await getApplicationDocumentsDirectory();
     return '${dir.path}/$_modelsSubDir/$_modelFileName';
+  }
+
+  /// CPU 모드에서 컴파일된 모델 캐시를 저장할 디렉터리 경로를 반환한다.
+  Future<String> _getCacheDir() async {
+    final dir = await getApplicationDocumentsDirectory();
+    return '${dir.path}/$_modelsSubDir/cache';
   }
 
   @override
