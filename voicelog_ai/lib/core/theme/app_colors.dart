@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  static const Color seed = Color(0xFF6B8CFF);
+  static const Color seed = Color(0xFF0059B9);
 
   // 감정 색상
   static const Color emotionJoy     = Color(0xFFFFC107);
