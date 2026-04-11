@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed": "#ffdbc8",
+                    "on-tertiary-fixed": "#311300",
+                    "outline": "#727785",
+                    "on-background": "#191c1e",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed-variant": "#2e4672",
+                    "surface-container-low": "#f2f4f6",
+                    "primary-fixed": "#d7e2ff",
+                    "surface-variant": "#e0e3e5",
+                    "inverse-on-surface": "#eff1f3",
+                    "error": "#ba1a1a",
+                    "tertiary": "#944600",
+                    "secondary-fixed-dim": "#afc7fa",
+                    "on-tertiary-fixed-variant": "#743500",
+                    "on-error-container": "#93000a",
+                    "background": "#f8f9fb",
+                    "on-secondary-fixed": "#001a40",
+                    "surface-bright": "#f8f9fb",
+                    "on-tertiary-container": "#fffbff",
+                    "outline-variant": "#c1c6d6",
+                    "on-secondary-container": "#3e5682",
+                    "primary": "#0059b9",
+                    "secondary-container": "#b5ccff",
+                    "tertiary-fixed-dim": "#ffb689",
+                    "secondary-fixed": "#d7e2ff",
+                    "surface-container-high": "#e6e8ea",
+                    "on-primary-fixed-variant": "#004491",
+                    "on-surface-variant": "#414754",
+                    "secondary": "#475e8b",
+                    "on-primary-container": "#fefcff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface": "#191c1e",
+                    "tertiary-container": "#ba5900",
+                    "primary-container": "#1071e5",
+                    "primary-fixed-dim": "#acc7ff",
+                    "surface-tint": "#005bbe",
+                    "inverse-surface": "#2d3133",
+                    "error-container": "#ffdad6",
+                    "inverse-primary": "#acc7ff",
+                    "surface-dim": "#d8dadc",
+                    "surface-container": "#eceef0",
+                    "surface": "#f8f9fb",
+                    "on-primary-fixed": "#001a40",
+                    "on-secondary": "#ffffff",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Manrope', sans-serif; -webkit-font-smoothing: antialiased; }
+        .glass-header {
+            backdrop-filter: blur(24px);
+            background-color: rgba(248, 249, 251, 0.7);
+        }
+        .text-tight { letter-spacing: -0.02em; }
+        .text-relaxed { line-height: 1.8; }
+        .inner-glow { box-shadow: inset 0 1px 0 rgba(255,255,255,0.8); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface">
+<!-- Top Navigation Bar (Shared Component Logic Applied) -->
+<header class="fixed top-0 w-full z-50 glass-header flex items-center justify-between px-6 h-16 shadow-[0_12px_24px_rgba(0,0,0,0.06)]">
+<button class="text-on-surface active:scale-95 duration-200 transition-opacity hover:opacity-80">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</button>
+<h1 class="text-xl font-bold tracking-tighter text-slate-900 font-headline">Diary Detail</h1>
+<button class="text-error active:scale-95 duration-200 transition-opacity hover:opacity-80">
+<span class="material-symbols-outlined text-2xl">delete</span>
+</button>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-2xl mx-auto">
+<!-- Date and Time Badge -->
+<div class="mb-6 flex items-center gap-3">
+<div class="bg-primary-fixed/30 text-on-primary-fixed-variant px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase font-label">
+                Monday, Oct 24
+            </div>
+<div class="text-on-surface-variant text-sm font-medium">
+                09:42 PM
+            </div>
+</div>
+<!-- Headline -->
+<h2 class="text-[2.25rem] font-extrabold text-on-surface text-tight leading-tight mb-8">
+            Finding peace in the morning rain
+        </h2>
+<!-- Memory Image Card -->
+<div class="mb-10 group relative overflow-hidden rounded-xl bg-surface-container shadow-[0_12px_24px_rgba(0,0,0,0.04)]">
+<img class="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Dreamy mountain landscape under a starry sky with soft glowing light and misty valley in soft minimal aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbtun_z6np3pDyI9UHzdy2lRUEo85pksRM5wQNgZWGCaqg1Dj6zOvkJ678jaKoE6cQibvBn9QYPQF-r-eRGCWHa2UpufVbkYkpRtN16Vi89I4rAyoAFTTniOzzK69jdAd8DZe374fjDWFMa0X-PsuzHDtV33526WdbKnxaB-m6z8T09qsKdkyEtOpUv4bWYaD3DBgsoRNFJPPTE8Aw2l-rYyJ9FW6hz93rKif_4vvwfdlTRBkTors6b0WvZrGk3oEDQ7glRRAesFXU"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-background/40 to-transparent"></div>
+<div class="absolute bottom-4 left-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-white text-sm" style="font-variation-settings: 'FILL' 1;">location_on</span>
+<span class="text-white text-xs font-semibold">Seoul, South Korea</span>
+</div>
+</div>
+<!-- Metadata Section: Emotion & Tags -->
+<div class="flex flex-wrap gap-3 mb-10">
+<!-- Emotion Chip -->
+<div class="flex items-center gap-2 bg-secondary-container text-on-secondary-container px-4 py-2 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-[1.2rem]" style="font-variation-settings: 'FILL' 1;">mood</span>
+<span class="text-sm font-bold">Calm &amp; Serene</span>
+</div>
+<!-- Tag Chips -->
+<div class="flex items-center gap-1.5 bg-surface-container-low text-on-surface-variant px-4 py-2 rounded-full border border-outline-variant/10">
+<span class="text-sm font-medium">#MorningRoutine</span>
+</div>
+<div class="flex items-center gap-1.5 bg-surface-container-low text-on-surface-variant px-4 py-2 rounded-full border border-outline-variant/10">
+<span class="text-sm font-medium">#RainyDay</span>
+</div>
+</div>
+<!-- Content Body -->
+<div class="mb-12">
+<p class="text-on-surface text-[1.125rem] text-relaxed leading-[2rem] font-normal tracking-wide">
+                Today, the rain started just as I woke up. Instead of feeling gloomy, the sound of the droplets against the window felt like a gentle invitation to slow down. I spent an extra thirty minutes just listening. It’s funny how a change in weather can shift your entire perspective on productivity. 
+                <br/><br/>
+                The air feels cleaner, and my thoughts seem a bit more organized than usual. I think I finally understand what "The Curated Breath" means in practice. It's not about doing less, but about doing everything with more space around it.
+            </p>
+</div>
+<!-- View Original / Transcription Section -->
+<section class="mb-16">
+<div class="bg-surface-container-low rounded-lg p-1">
+<details class="group">
+<summary class="list-none cursor-pointer flex items-center justify-between p-5 text-on-surface-variant hover:text-on-surface transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">graphic_eq</span>
+<span class="font-bold text-sm uppercase tracking-widest font-label">View Original Recording</span>
+</div>
+<span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
+</summary>
+<div class="px-6 pb-6 pt-2">
+<div class="bg-surface-container-lowest rounded-DEFAULT p-5 italic text-on-surface-variant/80 text-sm leading-loose border border-outline-variant/5">
+                            "Um, it's raining today... and it's actually really nice. I just woke up and I'm listening to the sound of the window... wait, not the window, the rain on the window. Feeling really peaceful. I think I'll skip the gym and just read for a bit..."
+                        </div>
+<div class="mt-4 flex items-center justify-between px-2">
+<div class="flex items-center gap-2">
+<button class="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center inner-glow active:scale-90 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<div class="h-1 w-32 bg-outline-variant/30 rounded-full overflow-hidden">
+<div class="h-full w-1/3 bg-primary"></div>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant">0:14 / 0:42</span>
+</div>
+</div>
+</div>
+</details>
+</div>
+</section>
+<!-- Insights Bento/Card -->
+<section class="mb-12">
+<h3 class="text-sm font-bold uppercase tracking-[0.2em] text-on-surface-variant mb-6 ml-1">Daily Insight</h3>
+<div class="grid grid-cols-1 gap-4">
+<div class="bg-primary-container text-on-primary-container p-6 rounded-lg shadow-sm flex items-start gap-4">
+<div class="bg-white/20 p-2 rounded-full">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div>
+<p class="font-bold text-lg mb-1">Mindfulness Peak</p>
+<p class="text-sm opacity-90 leading-relaxed">Your voice pitch indicates a high level of relaxation today. This matches your "Calm" tags from earlier this week.</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Shell (Shared Component Logic) -->
+<!-- Not rendered as this is a Task-Focused sub-page (Detail Screen) with a Back Action -->
+<!-- Floating Action Button - Suppressed for Details Screen as per UX Goal -->
+</body></html>

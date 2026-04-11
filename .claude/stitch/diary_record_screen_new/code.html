@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Diary Record - Voicelog AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#ffdbc8",
+                        "on-tertiary-fixed": "#311300",
+                        "outline": "#727785",
+                        "on-background": "#191c1e",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed-variant": "#2e4672",
+                        "surface-container-low": "#f2f4f6",
+                        "primary-fixed": "#d7e2ff",
+                        "surface-variant": "#e0e3e5",
+                        "inverse-on-surface": "#eff1f3",
+                        "error": "#ba1a1a",
+                        "tertiary": "#944600",
+                        "secondary-fixed-dim": "#afc7fa",
+                        "on-tertiary-fixed-variant": "#743500",
+                        "on-error-container": "#93000a",
+                        "background": "#f8f9fb",
+                        "on-secondary-fixed": "#001a40",
+                        "surface-bright": "#f8f9fb",
+                        "on-tertiary-container": "#fffbff",
+                        "outline-variant": "#c1c6d6",
+                        "on-secondary-container": "#3e5682",
+                        "primary": "#0059b9",
+                        "secondary-container": "#b5ccff",
+                        "tertiary-fixed-dim": "#ffb689",
+                        "secondary-fixed": "#d7e2ff",
+                        "surface-container-high": "#e6e8ea",
+                        "on-primary-fixed-variant": "#004491",
+                        "on-surface-variant": "#414754",
+                        "secondary": "#475e8b",
+                        "on-primary-container": "#fefcff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#191c1e",
+                        "tertiary-container": "#ba5900",
+                        "primary-container": "#1071e5",
+                        "primary-fixed-dim": "#acc7ff",
+                        "surface-tint": "#005bbe",
+                        "inverse-surface": "#2d3133",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#acc7ff",
+                        "surface-dim": "#d8dadc",
+                        "surface-container": "#eceef0",
+                        "surface": "#f8f9fb",
+                        "on-primary-fixed": "#001a40",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .waveform-bar {
+            height: 4px;
+            width: 4px;
+            border-radius: 9999px;
+            background-color: #3182F6;
+        }
+        .recording-pulse {
+            box-shadow: 0 0 0 0 rgba(0, 89, 185, 0.4);
+            animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 89, 185, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(0, 89, 185, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 89, 185, 0); }
+        }
+        .glass-header {
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation -->
+<header class="fixed top-0 w-full z-50 bg-slate-50/70 backdrop-blur-xl flex items-center justify-between px-6 h-16 shadow-[0_12px_24px_rgba(0,0,0,0.06)]">
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:opacity-80 active:scale-95 transition-all">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="text-xl font-bold tracking-tighter text-slate-900">Voicelog AI</div>
+<div class="flex items-center gap-4">
+<span class="text-primary font-semibold text-sm">Saving...</span>
+</div>
+</header>
+<main class="min-h-screen pt-24 pb-48 px-6 flex flex-col max-w-2xl mx-auto">
+<!-- Date & Status -->
+<div class="mb-10 text-center">
+<p class="text-on-surface-variant text-xs font-semibold tracking-widest uppercase mb-2">October 24, 2023</p>
+<h1 class="text-4xl font-extrabold tracking-tight text-on-surface">Daily Journal</h1>
+</div>
+<!-- STT Text Area (The "Editorial Canvas") -->
+<div class="flex-grow flex flex-col justify-start space-y-8">
+<div class="bg-surface-container-lowest p-10 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.03)] border border-white/40">
+<!-- Previous Text -->
+<p class="text-on-surface-variant/40 text-2xl font-medium leading-relaxed mb-6">
+                    Today was quite a long day at work. I felt a bit overwhelmed by the new project requirements, but then something shifted during lunch...
+                </p>
+<!-- Real-time Text (Active) -->
+<p class="text-on-surface text-3xl font-bold leading-tight tracking-tight">
+                    I started thinking about how I can break down the tasks into smaller pieces. It made me realize that my anxiety was mostly coming from the lack of a clear plan. 
+                    <span class="inline-block w-1 h-8 bg-primary animate-pulse ml-1 align-middle"></span>
+</p>
+</div>
+<!-- Metadata Tags -->
+<div class="flex flex-wrap gap-2 px-2">
+<div class="bg-primary-fixed text-on-primary-fixed-variant px-4 py-2 rounded-full text-xs font-bold tracking-tight">
+                    #WorkLife
+                </div>
+<div class="bg-surface-container-high text-on-surface-variant px-4 py-2 rounded-full text-xs font-bold tracking-tight">
+                    #Reflection
+                </div>
+<div class="bg-surface-container-high text-on-surface-variant px-4 py-2 rounded-full text-xs font-bold tracking-tight">
+                    #Productivity
+                </div>
+</div>
+</div>
+</main>
+<!-- Recording Controls & Waveform (Bottom Section) -->
+<section class="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-2xl px-6 pt-12 pb-16 rounded-t-[3rem] shadow-[0_-8px_40px_rgba(0,0,0,0.08)] z-40">
+<!-- Waveform Visualization -->
+<div class="flex items-center justify-center gap-1.5 h-16 mb-10 overflow-hidden">
+<div class="waveform-bar" style="height: 12px;"></div>
+<div class="waveform-bar" style="height: 24px;"></div>
+<div class="waveform-bar" style="height: 48px;"></div>
+<div class="waveform-bar" style="height: 32px;"></div>
+<div class="waveform-bar" style="height: 56px;"></div>
+<div class="waveform-bar" style="height: 40px; background-color: #1071e5;"></div>
+<div class="waveform-bar" style="height: 64px; background-color: #1071e5;"></div>
+<div class="waveform-bar" style="height: 44px; background-color: #1071e5;"></div>
+<div class="waveform-bar" style="height: 32px; background-color: #1071e5;"></div>
+<div class="waveform-bar" style="height: 20px;"></div>
+<div class="waveform-bar" style="height: 40px;"></div>
+<div class="waveform-bar" style="height: 28px;"></div>
+<div class="waveform-bar" style="height: 16px;"></div>
+</div>
+<div class="flex items-center justify-between max-w-xs mx-auto">
+<!-- Cancel Button -->
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-90">
+<span class="material-symbols-outlined">delete</span>
+</button>
+<!-- Primary Record Button -->
+<div class="relative">
+<button class="recording-pulse w-24 h-24 bg-gradient-to-tr from-primary to-primary-container rounded-full flex items-center justify-center text-white shadow-lg active:scale-95 transition-transform">
+<span class="material-symbols-outlined !text-4xl" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+</div>
+<!-- Done/Save Button -->
+<button class="w-12 h-12 flex items-center justify-center rounded-full bg-primary-container text-on-primary-container hover:opacity-90 transition-opacity active:scale-90">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check</span>
+</button>
+</div>
+<div class="mt-8 text-center">
+<span class="text-2xl font-extrabold tracking-tighter text-on-surface tabular-nums">02:45</span>
+</div>
+</section>
+<!-- Background Decoration (Asymmetrical Shapes) -->
+<div class="fixed top-[-10%] right-[-10%] w-[50%] h-[40%] bg-blue-100/30 blur-[120px] rounded-full -z-10"></div>
+<div class="fixed bottom-0 left-[-20%] w-[60%] h-[30%] bg-blue-50/50 blur-[100px] rounded-full -z-10"></div>
+<!-- Hidden Navigation Shell (For Page Intent Only) -->
+<nav class="hidden">
+<!-- TopAppBar Context -->
+<div data-icon="menu"></div>
+<div data-icon="account_circle"></div>
+<!-- BottomNavBar Context -->
+<div data-label="Logs"></div>
+<div data-icon="mic"></div>
+</nav>
+</body></html>

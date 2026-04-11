@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings - Voicelog AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed": "#ffdbc8",
+                    "on-tertiary-fixed": "#311300",
+                    "outline": "#727785",
+                    "on-background": "#191c1e",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed-variant": "#2e4672",
+                    "surface-container-low": "#f2f4f6",
+                    "primary-fixed": "#d7e2ff",
+                    "surface-variant": "#e0e3e5",
+                    "inverse-on-surface": "#eff1f3",
+                    "error": "#ba1a1a",
+                    "tertiary": "#944600",
+                    "secondary-fixed-dim": "#afc7fa",
+                    "on-tertiary-fixed-variant": "#743500",
+                    "on-error-container": "#93000a",
+                    "background": "#f8f9fb",
+                    "on-secondary-fixed": "#001a40",
+                    "surface-bright": "#f8f9fb",
+                    "on-tertiary-container": "#fffbff",
+                    "outline-variant": "#c1c6d6",
+                    "on-secondary-container": "#3e5682",
+                    "primary": "#0059b9",
+                    "secondary-container": "#b5ccff",
+                    "tertiary-fixed-dim": "#ffb689",
+                    "secondary-fixed": "#d7e2ff",
+                    "surface-container-high": "#e6e8ea",
+                    "on-primary-fixed-variant": "#004491",
+                    "on-surface-variant": "#414754",
+                    "secondary": "#475e8b",
+                    "on-primary-container": "#fefcff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface": "#191c1e",
+                    "tertiary-container": "#ba5900",
+                    "primary-container": "#1071e5",
+                    "primary-fixed-dim": "#acc7ff",
+                    "surface-tint": "#005bbe",
+                    "inverse-surface": "#2d3133",
+                    "error-container": "#ffdad6",
+                    "inverse-primary": "#acc7ff",
+                    "surface-dim": "#d8dadc",
+                    "surface-container": "#eceef0",
+                    "surface": "#f8f9fb",
+                    "on-primary-fixed": "#001a40",
+                    "on-secondary": "#ffffff",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; -webkit-font-smoothing: antialiased; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="bg-slate-50/70 backdrop-blur-xl fixed top-0 w-full z-50 shadow-[0_12px_24px_rgba(0,0,0,0.06)] flex items-center justify-between px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 duration-200 cursor-pointer" data-icon="menu">menu</span>
+<h1 class="text-xl font-bold tracking-tighter text-slate-900">Voicelog AI</h1>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-blue-600 hover:opacity-80 transition-opacity active:scale-95 duration-200 cursor-pointer" data-icon="account_circle">account_circle</span>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-2xl mx-auto">
+<!-- Profile Anchor Card -->
+<section class="mb-10">
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-[0_12px_24px_rgba(0,0,0,0.04)] flex items-center gap-6">
+<div class="relative">
+<img class="w-20 h-20 rounded-full object-cover" data-alt="Modern professional portrait of a man in minimalist attire with soft natural lighting and neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQyY1oj2RnFWASPoa5mMMdjWbKYRoHXglCjkHoZu70C1Q6JGoRvJ9Tvttx-zS2ZFXnvzwOE0bMiqa724uJtoNqk-Yea6KfwC9wO9tWTVCZWEsQoI4kmlNVJtVizX-ODy4AjJ7p0ECYaxyIFt2ZlAU3507sqIkF4CE_1v0A7qWeYt8PpKxWTi3cCMwUiRtf1Biqz09yVHVpv6asZvRRsy9DjzGRU5vROnlr5vye1C3ONvp7N6TcdLbdSk4m14PLSJQAT3akg5Q6ls2M"/>
+<div class="absolute -bottom-1 -right-1 bg-primary p-1.5 rounded-full border-4 border-surface-container-lowest">
+<span class="material-symbols-outlined text-[14px] text-white" data-icon="edit">edit</span>
+</div>
+</div>
+<div>
+<h2 class="text-2xl font-extrabold tracking-tight text-on-surface">Alex Thompson</h2>
+<p class="text-on-surface-variant text-sm font-medium">Premium Member</p>
+</div>
+</div>
+</section>
+<!-- Settings Groups -->
+<div class="space-y-12">
+<!-- Account Section -->
+<section>
+<h3 class="text-xs font-extrabold uppercase tracking-[0.2em] text-on-surface-variant/60 mb-4 px-2">Account &amp; Security</h3>
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden">
+<!-- Item -->
+<div class="flex items-center justify-between p-5 hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</div>
+<span class="font-bold text-on-surface">Personal Information</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Item -->
+<div class="flex items-center justify-between p-5 hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="shield">shield</span>
+</div>
+<span class="font-bold text-on-surface">Security &amp; Password</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Preferences Section -->
+<section>
+<h3 class="text-xs font-extrabold uppercase tracking-[0.2em] text-on-surface-variant/60 mb-4 px-2">Preferences</h3>
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden">
+<!-- Toggle Item -->
+<div class="flex items-center justify-between p-5">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</div>
+<span class="font-bold text-on-surface">Push Notifications</span>
+</div>
+<div class="relative inline-flex items-center cursor-pointer">
+<div class="w-11 h-6 bg-primary rounded-full transition-colors"></div>
+<div class="absolute left-6 w-4 h-4 bg-white rounded-full transition-transform"></div>
+</div>
+</div>
+<!-- Toggle Item -->
+<div class="flex items-center justify-between p-5">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="dark_mode">dark_mode</span>
+</div>
+<span class="font-bold text-on-surface">Dark Mode</span>
+</div>
+<div class="relative inline-flex items-center cursor-pointer">
+<div class="w-11 h-6 bg-surface-container-highest rounded-full transition-colors"></div>
+<div class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform"></div>
+</div>
+</div>
+<!-- Selection Item -->
+<div class="flex items-center justify-between p-5 hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="translate">translate</span>
+</div>
+<span class="font-bold text-on-surface">App Language</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm font-medium text-primary">English</span>
+<span class="material-symbols-outlined text-outline-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+</section>
+<!-- About Section -->
+<section>
+<h3 class="text-xs font-extrabold uppercase tracking-[0.2em] text-on-surface-variant/60 mb-4 px-2">About &amp; Legal</h3>
+<div class="bg-surface-container-low p-6 rounded-xl space-y-6">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-on-surface font-bold text-lg">Voicelog AI Pro</p>
+<p class="text-on-surface-variant text-xs font-medium tracking-wide">Version 2.4.12 (Stable)</p>
+</div>
+<div class="bg-surface-container-lowest px-4 py-2 rounded-full shadow-sm">
+<span class="text-primary text-xs font-extrabold uppercase tracking-widest">Up to date</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-lowest p-4 rounded-lg hover:shadow-md transition-shadow cursor-pointer">
+<span class="material-symbols-outlined text-primary mb-2" data-icon="description">description</span>
+<p class="text-sm font-bold text-on-surface">Privacy Policy</p>
+<p class="text-[10px] text-on-surface-variant/70 mt-1">Read how we protect your data.</p>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-lg hover:shadow-md transition-shadow cursor-pointer">
+<span class="material-symbols-outlined text-primary mb-2" data-icon="gavel">gavel</span>
+<p class="text-sm font-bold text-on-surface">Terms of Service</p>
+<p class="text-[10px] text-on-surface-variant/70 mt-1">Legal agreement and usage.</p>
+</div>
+</div>
+<button class="w-full py-4 bg-error-container text-error rounded-xl font-bold text-sm active:scale-[0.98] transition-transform">
+                        Log Out
+                    </button>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pt-3 pb-8 bg-white/80 backdrop-blur-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.04)] rounded-t-[2.5rem]">
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-blue-500 transition-transform active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="home_max">home_max</span>
+<span class="font-['Manrope'] text-[10px] font-semibold uppercase tracking-widest">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-blue-500 transition-transform active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="mic">mic</span>
+<span class="font-['Manrope'] text-[10px] font-semibold uppercase tracking-widest">Logs</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-blue-500 transition-transform active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="analytics">analytics</span>
+<span class="font-['Manrope'] text-[10px] font-semibold uppercase tracking-widest">Insight</span>
+</a>
+<a class="flex flex-col items-center justify-center text-blue-600 bg-blue-50 rounded-full px-4 py-1 active:scale-90 transition-transform duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span class="font-['Manrope'] text-[10px] font-semibold uppercase tracking-widest">Profile</span>
+</a>
+</nav>
+</body></html>
