@@ -6,7 +6,7 @@ part of 'diary_repository_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$isarHash() => r'1c2c80c8a7ca77be53cf339f6048148479ada30e';
+String _$isarHash() => r'9d1e12fc36c61faf74a120734513b1716bff1778';
 
 /// Isar 인스턴스 Provider (앱 생명주기 동안 유지)
 ///

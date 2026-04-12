@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:voicelog_ai/features/diary/domain/i_diary_repository.dart';
 import 'package:voicelog_ai/features/diary/infrastructure/diary_entry_document.dart';
 import 'package:voicelog_ai/features/diary/infrastructure/diary_repository.dart';
+import 'package:voicelog_ai/features/settings/infrastructure/app_settings_document.dart';
 
 part 'diary_repository_provider.g.dart';
 
@@ -12,7 +13,7 @@ part 'diary_repository_provider.g.dart';
 Future<Isar> isar(IsarRef ref) async {
   final dir = await getApplicationDocumentsDirectory();
   return Isar.open(
-    [DiaryEntryDocumentSchema],
+    [DiaryEntryDocumentSchema, AppSettingsDocumentSchema],
     directory: dir.path,
   );
 }

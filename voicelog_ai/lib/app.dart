@@ -6,6 +6,7 @@ import 'package:voicelog_ai/core/router/app_router.dart';
 import 'package:voicelog_ai/core/theme/app_theme.dart';
 import 'package:voicelog_ai/core/utils/app_lifecycle_observer.dart';
 import 'package:voicelog_ai/features/diary/application/llm_provider.dart';
+import 'package:voicelog_ai/features/settings/application/settings_provider.dart';
 
 class VoicelogApp extends ConsumerStatefulWidget {
   const VoicelogApp({super.key});
@@ -33,11 +34,14 @@ class _VoicelogAppState extends ConsumerState<VoicelogApp> {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
+    final settingsAsync = ref.watch(settingsNotifierProvider);
+    final isDark = settingsAsync.valueOrNull?.isDarkMode ?? false;
+
     return MaterialApp.router(
       title: AppStrings.appName,
       theme: buildLightTheme(),
       darkTheme: buildDarkTheme(),
-      themeMode: ThemeMode.system,
+      themeMode: isDark ? ThemeMode.dark : ThemeMode.system,
       routerConfig: router,
     );
   }
