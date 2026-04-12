@@ -31,6 +31,18 @@ class MediaPipeLlmInferenceService implements ILlmInferenceService {
     if (_isReady) return; // 중복 초기화 방지
 
     final modelPath = await _getModelPath();
+
+    // ── 모델 파일 존재 여부 사전 검사 ──────────────────────────────
+    // 파일 없이 LlmInferenceEngine을 생성하면 생성자는 성공하지만
+    // 실제 추론 시 hang 또는 크래시가 발생한다 (mediapipe_genai 0.0.1 동작).
+    // 여기서 명시적으로 확인하여 "모델 없음" 에러를 즉시 반환한다.
+    final modelFile = File(modelPath);
+    if (!modelFile.existsSync()) {
+      AppLogger.error('모델 파일 없음: $modelPath', null);
+      throw FileSystemException('모델 파일이 없습니다. 다운로드가 필요합니다.', modelPath);
+    }
+    // ────────────────────────────────────────────────────────────────
+
     await _initWithFallback(modelPath);
   }
 
