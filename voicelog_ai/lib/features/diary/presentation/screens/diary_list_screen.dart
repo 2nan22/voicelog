@@ -13,17 +13,17 @@ import 'package:voicelog_ai/features/diary/application/diary_list_provider.dart'
 import 'package:voicelog_ai/features/diary/domain/diary_entry.dart';
 import 'package:voicelog_ai/features/diary/presentation/widgets/diary_card.dart';
 
-/// 날짜별 그룹핑된 일기 목록 화면.
+/// 날짜별 그룹핑된 일기 목록 화면 (Shell body).
 ///
-/// Stitch 디자인 기준: glass 상단 nav + 히어로 섹션 + 통계 벤토 + 일기 목록 + glass 하단 nav
-class DiaryListScreen extends ConsumerStatefulWidget {
-  const DiaryListScreen({super.key});
+/// Scaffold는 MainShell이 소유. 이 위젯은 body만 반환한다.
+class DiaryListBody extends ConsumerStatefulWidget {
+  const DiaryListBody({super.key});
 
   @override
-  ConsumerState<DiaryListScreen> createState() => _DiaryListScreenState();
+  ConsumerState<DiaryListBody> createState() => _DiaryListBodyState();
 }
 
-class _DiaryListScreenState extends ConsumerState<DiaryListScreen> {
+class _DiaryListBodyState extends ConsumerState<DiaryListBody> {
   @override
   void initState() {
     super.initState();
@@ -40,83 +40,87 @@ class _DiaryListScreenState extends ConsumerState<DiaryListScreen> {
     final diariesAsync = ref.watch(diaryListNotifierProvider);
     final topPadding = MediaQuery.of(context).padding.top;
 
-    return Scaffold(
-      extendBody: true,
-      backgroundColor: const Color(0xFFF2F4F6),
-      body: CustomScrollView(
-        slivers: [
-          // 고정 글래스 상단 네비게이션
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _GlassNavDelegate(topPadding: topPadding),
-          ),
-          // 히어로 섹션
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 8),
-              child: _HeroSection(),
+    return Stack(
+      children: [
+        CustomScrollView(
+          slivers: [
+            // 고정 글래스 상단 네비게이션
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _GlassNavDelegate(topPadding: topPadding),
             ),
-          ),
-          // 통계 벤토 카드
-          diariesAsync.when(
-            loading: () => const SliverToBoxAdapter(
+            // 히어로 섹션
+            SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(24, 16, 24, 8),
-                child: _StatsBentoLoading(),
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 8),
+                child: _HeroSection(),
               ),
             ),
-            error: (_, __) => const SliverToBoxAdapter(child: SizedBox(height: 8)),
-            data: (entries) => SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-                child: _StatsBento(entries: entries),
-              ),
-            ),
-          ),
-          // 날짜 그룹 일기 목록
-          diariesAsync.when(
-            loading: () => SliverList.builder(
-              itemCount: 3,
-              itemBuilder: (_, __) => const Padding(
-                padding: EdgeInsets.fromLTRB(24, 8, 24, 8),
-                child: LoadingShimmer(height: 130, borderRadius: 20),
-              ),
-            ),
-            error: (e, _) => SliverToBoxAdapter(
-              child: Center(
+            // 통계 벤토 카드
+            diariesAsync.when(
+              loading: () => const SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Text(
-                    '오류가 발생했어요: $e',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF414754),
+                  padding: EdgeInsets.fromLTRB(24, 16, 24, 8),
+                  child: _StatsBentoLoading(),
+                ),
+              ),
+              error: (_, __) => const SliverToBoxAdapter(child: SizedBox(height: 8)),
+              data: (entries) => SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                  child: _StatsBento(entries: entries),
+                ),
+              ),
+            ),
+            // 날짜 그룹 일기 목록
+            diariesAsync.when(
+              loading: () => SliverList.builder(
+                itemCount: 3,
+                itemBuilder: (_, __) => const Padding(
+                  padding: EdgeInsets.fromLTRB(24, 8, 24, 8),
+                  child: LoadingShimmer(height: 130, borderRadius: 20),
+                ),
+              ),
+              error: (e, _) => SliverToBoxAdapter(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Text(
+                      '오류가 발생했어요: $e',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF414754),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            data: (entries) => entries.isEmpty
-                ? SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Text(
-                        AppStrings.noEntries,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: const Color(0xFF414754),
+              data: (entries) => entries.isEmpty
+                  ? SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Text(
+                          AppStrings.noEntries,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: const Color(0xFF414754),
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                : _buildGroupedList(context, entries),
+                    )
+                  : _buildGroupedList(context, entries),
+            ),
+            // 하단 nav 높이만큼 여백
+            const SliverToBoxAdapter(child: SizedBox(height: 120)),
+          ],
+        ),
+        // FAB — Stack 하단 우측에 배치 (Scaffold 외부이므로 floatingActionButton 사용 불가)
+        Positioned(
+          right: 20,
+          bottom: 100, // 하단 탭 높이(64) + 여백
+          child: _GradientFab(
+            onTap: () => context.push(AppRoutes.diaryRecord),
           ),
-          // 하단 nav 높이만큼 여백
-          const SliverToBoxAdapter(child: SizedBox(height: 120)),
-        ],
-      ),
-      floatingActionButton: _GradientFab(
-        onTap: () => context.push(AppRoutes.diaryRecord),
-      ),
-      bottomNavigationBar: const _GlassBottomNav(),
+        ),
+      ],
     );
   }
 
@@ -400,75 +404,6 @@ class _GradientFab extends StatelessWidget {
         ),
         child: const Icon(Icons.mic_rounded, color: Colors.white, size: 30),
       ),
-    );
-  }
-}
-
-// ─── 글래스 하단 네비게이션 ───────────────────────────────────────────────────
-
-class _GlassBottomNav extends StatelessWidget {
-  const _GlassBottomNav();
-
-  @override
-  Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-    return ClipRRect(
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(40),
-        topRight: Radius.circular(40),
-      ),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: Container(
-          height: 64 + bottomPadding,
-          color: Colors.white.withValues(alpha: 0.80),
-          padding: EdgeInsets.only(bottom: bottomPadding),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NavItem(icon: Icons.home_max_outlined, label: 'Home', isActive: true),
-              _NavItem(icon: Icons.mic_rounded, label: 'Logs', isActive: false),
-              _NavItem(icon: Icons.analytics_outlined, label: 'Insight', isActive: false),
-              _NavItem(icon: Icons.person_outline_rounded, label: 'Profile', isActive: false),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    required this.isActive,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool isActive;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isActive
-        ? Theme.of(context).colorScheme.primary
-        : const Color(0xFF9AA0B0);
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.w700,
-            color: color,
-            letterSpacing: 0.8,
-          ),
-        ),
-      ],
     );
   }
 }

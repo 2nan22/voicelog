@@ -598,7 +598,6 @@ refactor(router): ShellRoute 도입 — 공통 하단 탭 네비 MainShell 분�
 
 ```
 ---
-[커밋 준비 — 꼭지 2]
 feat(logs): LogsScreen — 월별 타임라인 뷰
 
 - 월 그룹 헤더 + 기록 건수 배지

@@ -6,12 +6,12 @@ part of 'app_router.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$appRouterHash() => r'28e99f3324d2d3bcaad8a31c12f490b65c87381f';
+String _$appRouterHash() => r'41d7d8d8936be4dc148e02a3d3ce05e5619c63b7';
 
 /// 앱 전체 라우팅 Provider.
 ///
 /// keepAlive: true — 앱 생명주기 동안 GoRouter 인스턴스를 유지한다.
-/// 네비게이션 스택 상태가 Provider 재빌드로 초기화되지 않도록 한다.
+/// ShellRoute로 공통 하단 탭 네비를 분리한다.
 ///
 /// Copied from [appRouter].
 @ProviderFor(appRouter)
