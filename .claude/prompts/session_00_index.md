@@ -23,6 +23,9 @@
 | Session 09 | `session_09_detail_routing.md` | 상세 화면, go_router 완성, 앱 생명주기 관리 |
 | Session 10 | `session_10_settings.md` | 설정 모델, SettingsScreen, 다크 모드 |
 | Session 11 | `session_11_testing.md` | 단위 테스트, Mock 클래스, 위젯 테스트, 커버리지 |
+| Session 12 | `session_12_logs_tab.md` | ShellRoute 탭 네비 리팩토링, Logs 월별 타임라인 |
+| Session 13 | `session_13_insight_tab.md` | 감정 도넛 차트, 스트릭, 태그 빈도 Insight 화면 |
+| Session 14 | `session_14_profile_tab.md` | 앱 통계, 모델 정보, 전체 삭제, Profile 화면 |
 
 ---
 
