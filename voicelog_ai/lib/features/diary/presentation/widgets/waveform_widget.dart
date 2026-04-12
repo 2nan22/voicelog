@@ -17,7 +17,7 @@ class WaveformWidget extends StatefulWidget {
 
   final bool isRecording;
 
-  /// STT 진폭 데이터 (0.0 ~ 1.0). 값이 없으면 sin 애니메이션으로 대체.
+  /// STT 진폭 데이터 (0.0 ~ 1.0). 값이 없으면 저진폭 sin 애니메이션(대기 중)으로 표시.
   final List<double> amplitudes;
 
   @override
@@ -109,14 +109,22 @@ class _WaveformPainter extends CustomPainter {
   double _barHeight(int index, double maxHeight) {
     if (!isRecording) return 4.0;
 
-    if (index < amplitudes.length) {
-      // 실제 진폭 데이터가 있을 때 — 최소 4px 보장
-      return (amplitudes[index] * maxHeight).clamp(4.0, maxHeight);
+    if (amplitudes.isNotEmpty) {
+      // 슬라이딩 윈도우: 최신 amplitude를 가장 오른쪽 bar에 매핑
+      final offset = amplitudes.length - _barCount;
+      final ampIndex = offset + index;
+      if (ampIndex >= 0 && ampIndex < amplitudes.length) {
+        return (amplitudes[ampIndex] * maxHeight).clamp(4.0, maxHeight);
+      }
+      // 초기 구간(데이터 부족): 최신 amplitude로 변조된 sin
+      final latestAmp = amplitudes.last;
+      final phase = (index / _barCount) * 2 * pi;
+      return ((sin(phase).abs() * 0.5 + 0.5) * latestAmp * maxHeight).clamp(4.0, maxHeight);
     }
 
-    // 진폭 없을 때 sin 파형으로 대체 (자연스러운 애니메이션)
+    // amplitude 데이터 없음 → 저진폭 sin (0.25 이하) — 시각적 "대기 중" 느낌
     final phase = (index / _barCount) * 2 * pi + animationValue * 2 * pi;
-    return (sin(phase).abs() * 0.7 + 0.3) * maxHeight;
+    return (sin(phase).abs() * 0.25 * maxHeight).clamp(4.0, maxHeight);
   }
 
   @override
