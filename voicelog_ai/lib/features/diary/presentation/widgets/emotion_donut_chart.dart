@@ -11,14 +11,6 @@ class EmotionDonutChart extends StatelessWidget {
   /// 감정 이름 → 건수 맵
   final Map<String, int> counts;
 
-  static const _emotions = ['기쁨', '평온', '슬픔', '화남'];
-  static const _colors = [
-    AppColors.emotionJoy,
-    AppColors.emotionCalm,
-    AppColors.emotionSadness,
-    AppColors.emotionAnger,
-  ];
-
   @override
   Widget build(BuildContext context) {
     final total = counts.values.fold(0, (a, b) => a + b);
