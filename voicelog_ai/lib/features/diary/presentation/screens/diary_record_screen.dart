@@ -19,11 +19,13 @@ import 'package:voicelog_ai/features/diary/presentation/widgets/diary_result_wid
 import 'package:voicelog_ai/features/diary/presentation/widgets/mic_button.dart';
 import 'package:voicelog_ai/features/diary/presentation/widgets/streaming_text_widget.dart';
 import 'package:voicelog_ai/features/diary/presentation/widgets/waveform_widget.dart';
+import 'package:voicelog_ai/features/settings/application/settings_provider.dart';
+import 'package:voicelog_ai/features/settings/domain/app_settings.dart';
 
 /// 음성 녹음 및 STT 결과 확인 화면.
 ///
 /// 마이크 버튼으로 녹음을 시작/중지하고, 인식된 텍스트를 실시간으로 표시한다.
-/// 레이아웃: 글래스 헤더 + 스크롤 콘텐츠(날짜·텍스트 카드) + 글래스 하단 패널(파형·버튼·타이머).
+/// 레이아웃: 글래스 헤더 + 스크롤 콘텐츠(날짜·STT카드·LLM카드) + 글래스 하단 패널(파형·버튼·타이머).
 class DiaryRecordScreen extends ConsumerStatefulWidget {
   const DiaryRecordScreen({super.key});
 
@@ -104,7 +106,15 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     }
 
     try {
-      final prompt = kDiaryProcessingPrompt.replaceAll('{raw_text}', rawText);
+      // 설정에서 문체를 읽어 {style_instruction} 치환
+      final settingsAsync = ref.read(settingsNotifierProvider);
+      final writingStyle = settingsAsync.valueOrNull?.writingStyle ?? WritingStyle.diary;
+      final styleInstruction =
+          kWritingStyleInstructions[writingStyle] ?? kWritingStyleInstructions[WritingStyle.diary]!;
+      final prompt = kDiaryProcessingPrompt
+          .replaceAll('{style_instruction}', styleInstruction)
+          .replaceAll('{raw_text}', rawText);
+
       await for (final chunk in service.generateStream(prompt)) {
         if (!mounted) return;
         // 삭제 등으로 상태가 바뀌면 중단
@@ -128,8 +138,6 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
   void _onDelete() {
     _inferenceTimer?.cancel();
     // processing 중 취소 시 엔진의 _responseController를 즉시 해제한다.
-    // dispose() 없이 반환만 하면 mediapipe_genai 내부 컨트롤러가 남아 있어
-    // 다음 generateResponse() 호출 시 assertion 에러가 발생한다.
     if (ref.read(diaryRecordNotifierProvider) == RecordingState.processing) {
       ref.read(llmInferenceServiceProvider).dispose();
     }
@@ -141,6 +149,24 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     ref.read(diaryProcessNotifierProvider.notifier).reset();
     _stopTimer();
     setState(() => _elapsedSeconds = 0);
+  }
+
+  /// recording 상태에서 우측 완료 버튼 동작:
+  /// STT를 중지하고 즉시 LLM 처리를 시작한다.
+  void _onFinishRecording() {
+    unawaited(_finishRecordingAsync());
+  }
+
+  Future<void> _finishRecordingAsync() async {
+    final sttService = ref.read(speechToTextServiceProvider);
+    final notifier = ref.read(diaryRecordNotifierProvider.notifier);
+    try {
+      await sttService.stopListening();
+      notifier.startProcessing();
+    } catch (e) {
+      AppLogger.error('STT 중지 실패', e);
+      notifier.setError();
+    }
   }
 
   Future<void> _onSave() async {
@@ -238,6 +264,8 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
               recordingState: recordingState,
               timerDisplay: _timerDisplay,
               onDelete: _onDelete,
+              onFinishRecording: _onFinishRecording,
+              onSave: _onSave,
             ),
           ),
         ],
@@ -264,7 +292,7 @@ class _BackgroundDecorations extends StatelessWidget {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF3182F6).withValues(alpha:0.08),
+                color: const Color(0xFF3182F6).withValues(alpha: 0.08),
               ),
             ),
           ),
@@ -276,7 +304,7 @@ class _BackgroundDecorations extends StatelessWidget {
               height: 200,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(180),
-                color: const Color(0xFFD7E2FF).withValues(alpha:0.3),
+                color: const Color(0xFFD7E2FF).withValues(alpha: 0.3),
               ),
             ),
           ),
@@ -307,7 +335,7 @@ class _GlassHeader extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           height: topPadding + 64,
-          color: const Color(0xFFF8F9FB).withValues(alpha:0.75),
+          color: const Color(0xFFF8F9FB).withValues(alpha: 0.75),
           padding: EdgeInsets.only(
             top: topPadding,
             left: AppDimensions.paddingSmall,
@@ -378,12 +406,11 @@ class _ScrollableContent extends StatelessWidget {
         children: [
           const Center(child: _DateHeader()),
           const SizedBox(height: AppDimensions.paddingLarge),
-          _DiaryContentCard(
-            sttText: sttText,
-            recordingState: recordingState,
-          ),
+          // STT 원문 카드 — 항상 표시, processing/done 시 dimmed
+          _SttCard(sttText: sttText, recordingState: recordingState),
           const SizedBox(height: AppDimensions.paddingMedium),
-          const DiaryResultWidget(),
+          // LLM 보정 결과 카드 — processing 진입 후 나타남
+          _LlmResultCard(recordingState: recordingState),
         ],
       ),
     );
@@ -429,14 +456,14 @@ class _DateHeader extends StatelessWidget {
   }
 }
 
-// ─── 일기 콘텐츠 카드 (STT + 스트리밍 텍스트 통합) ──────────────────────────
+// ─── STT 원문 카드 ────────────────────────────────────────────────────────────
 
-/// STT 원문과 LLM 스트리밍 텍스트를 하나의 카드에 표시한다.
+/// STT 인식 원문을 표시하는 카드.
 ///
-/// - idle/recording: STT 텍스트 + 깜빡이는 커서
-/// - processing/done: STT 텍스트(흐리게) + LLM 스트리밍 텍스트
-class _DiaryContentCard extends ConsumerWidget {
-  const _DiaryContentCard({
+/// - idle/recording: 실시간 갱신, 녹음 중 블링킹 커서 표시
+/// - processing/done: 회색 dimmed (opacity 0.45)
+class _SttCard extends StatelessWidget {
+  const _SttCard({
     required this.sttText,
     required this.recordingState,
   });
@@ -445,13 +472,13 @@ class _DiaryContentCard extends ConsumerWidget {
   final RecordingState recordingState;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final isProcessingOrDone = recordingState == RecordingState.processing ||
         recordingState == RecordingState.done;
 
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 180),
+      constraints: const BoxConstraints(minHeight: 140),
       padding: const EdgeInsets.all(AppDimensions.paddingXLarge),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -473,17 +500,24 @@ class _DiaryContentCard extends ConsumerWidget {
       return _buildPlaceholder(context);
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (sttText.isNotEmpty) ...[
-          // STT 원문: processing/done 상태에서는 흐리게 표시
-          _buildSttText(context, isProcessingOrDone),
-          if (isProcessingOrDone)
-            const SizedBox(height: AppDimensions.paddingLarge),
-        ],
-        // LLM 스트리밍 텍스트 (processing/done 시 표시)
-        if (isProcessingOrDone) const StreamingTextWidget(),
+        Expanded(
+          child: Opacity(
+            opacity: isProcessingOrDone ? 0.45 : 1.0,
+            child: Text(
+              sttText,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    height: 1.6,
+                    color: const Color(0xFF191C1E),
+                  ),
+            ),
+          ),
+        ),
+        if (!isProcessingOrDone && recordingState == RecordingState.recording)
+          const _BlinkingCursor(),
       ],
     );
   }
@@ -515,29 +549,74 @@ class _DiaryContentCard extends ConsumerWidget {
       ],
     );
   }
+}
 
-  Widget _buildSttText(BuildContext context, bool isDimmed) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(
-          child: Text(
-            sttText,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w500,
-                  height: 1.6,
-                  color: isDimmed
-                      ? const Color(0xFF191C1E).withValues(alpha: 0.35)
-                      : const Color(0xFF191C1E),
+// ─── LLM 보정 결과 카드 ───────────────────────────────────────────────────────
+
+/// LLM 보정 텍스트 + 감정·태그 뱃지를 하나의 카드로 표시한다.
+///
+/// processing 상태 진입 이후에만 나타나며,
+/// 파싱 완료([DiaryProcessState.parsedResult] != null) 후 감정·태그 섹션이 표시된다.
+class _LlmResultCard extends ConsumerWidget {
+  const _LlmResultCard({required this.recordingState});
+
+  final RecordingState recordingState;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isProcessingOrDone = recordingState == RecordingState.processing ||
+        recordingState == RecordingState.done;
+
+    if (!isProcessingOrDone) return const SizedBox.shrink();
+
+    final parsedResult = ref.watch(
+      diaryProcessNotifierProvider.select((s) => s.parsedResult),
+    );
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppDimensions.paddingXLarge),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusLg),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF000000).withValues(alpha: 0.04),
+            blurRadius: 40,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 카드 상단 레이블
+          Text(
+            'AI 보정',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
                 ),
           ),
-        ),
-        if (!isDimmed && recordingState == RecordingState.recording)
-          const _BlinkingCursor(),
-      ],
+          const SizedBox(height: AppDimensions.paddingMedium),
+          // 스트리밍 텍스트 (처리 중 실시간 갱신)
+          const StreamingTextWidget(),
+          // 파싱 완료 후 감정·태그 뱃지
+          if (parsedResult != null) ...[
+            const SizedBox(height: AppDimensions.paddingMedium),
+            Divider(height: 1, color: scheme.outlineVariant),
+            const SizedBox(height: AppDimensions.paddingMedium),
+            const DiaryResultWidget(),
+          ],
+        ],
+      ),
     );
   }
 }
+
+// ─── 블링킹 커서 ──────────────────────────────────────────────────────────────
 
 class _BlinkingCursor extends StatefulWidget {
   const _BlinkingCursor();
@@ -592,11 +671,15 @@ class _BottomPanel extends StatelessWidget {
     required this.recordingState,
     required this.timerDisplay,
     required this.onDelete,
+    required this.onFinishRecording,
+    required this.onSave,
   });
 
   final RecordingState recordingState;
   final String timerDisplay;
   final VoidCallback onDelete;
+  final VoidCallback onFinishRecording;
+  final Future<void> Function() onSave;
 
   @override
   Widget build(BuildContext context) {
@@ -610,10 +693,10 @@ class _BottomPanel extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha:0.85),
+            color: Colors.white.withValues(alpha: 0.85),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha:0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 40,
                 offset: const Offset(0, -8),
               ),
@@ -638,6 +721,8 @@ class _BottomPanel extends StatelessWidget {
                   child: _ControlsRow(
                     recordingState: recordingState,
                     onDelete: onDelete,
+                    onFinishRecording: onFinishRecording,
+                    onSave: onSave,
                   ),
                 ),
               ),
@@ -660,35 +745,101 @@ class _BottomPanel extends StatelessWidget {
 
 // ─── 컨트롤 버튼 행 ───────────────────────────────────────────────────────────
 
+/// 녹음 상태별 버튼 구성:
+///
+/// | 상태       | 좌측        | 중앙           | 우측          |
+/// |-----------|------------|---------------|--------------|
+/// | idle      | 투명        | MicButton(시작) | 투명          |
+/// | recording | 삭제        | MicButton(중지) | 완료체크       |
+/// | processing | 삭제(비활성) | MicButton(스피너) | 저장(비활성) |
+/// | done      | 재녹음      | ▶재생(placeholder) | 저장      |
+/// | error     | 재녹음      | MicButton     | 투명          |
 class _ControlsRow extends StatelessWidget {
   const _ControlsRow({
     required this.recordingState,
     required this.onDelete,
+    required this.onFinishRecording,
+    required this.onSave,
   });
 
   final RecordingState recordingState;
   final VoidCallback onDelete;
+  final VoidCallback onFinishRecording;
+  final Future<void> Function() onSave;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _SideButton(
-          icon: Icons.delete_outline_rounded,
-          tooltip: AppStrings.deleteDiary,
-          onTap: recordingState != RecordingState.idle ? onDelete : null,
-        ),
-        const MicButton(),
-        const _SideButton(
-          icon: Icons.check_rounded,
-          tooltip: AppStrings.saveDiary,
-          isFilled: true,
-        ),
+        _buildLeftButton(),
+        _buildCenterButton(),
+        _buildRightButton(),
       ],
     );
   }
+
+  Widget _buildLeftButton() => switch (recordingState) {
+    RecordingState.idle => const _InvisibleButton(),
+    RecordingState.recording => _SideButton(
+        icon: Icons.delete_outline_rounded,
+        tooltip: AppStrings.deleteDiary,
+        onTap: onDelete,
+      ),
+    RecordingState.processing => const _SideButton(
+        icon: Icons.delete_outline_rounded,
+        tooltip: AppStrings.deleteDiary,
+      ),
+    RecordingState.done || RecordingState.error => _SideButton(
+        icon: Icons.replay_rounded,
+        tooltip: AppStrings.btnReRecord,
+        onTap: onDelete,
+      ),
+  };
+
+  Widget _buildCenterButton() => switch (recordingState) {
+    RecordingState.done => const _SideButton(
+        icon: Icons.play_arrow_rounded,
+        tooltip: AppStrings.btnPlayRecording,
+        isFilled: true, // 꼭지 3에서 onTap 구현
+      ),
+    _ => const MicButton(),
+  };
+
+  Widget _buildRightButton() => switch (recordingState) {
+    RecordingState.idle || RecordingState.error => const _InvisibleButton(),
+    RecordingState.recording => _SideButton(
+        icon: Icons.check_rounded,
+        tooltip: AppStrings.btnFinishRecording,
+        onTap: onFinishRecording,
+        isFilled: true,
+      ),
+    RecordingState.processing => const _SideButton(
+        icon: Icons.check_rounded,
+        tooltip: AppStrings.btnSave,
+        isFilled: true,
+      ),
+    RecordingState.done => _SideButton(
+        icon: Icons.check_rounded,
+        tooltip: AppStrings.btnSave,
+        onTap: onSave,
+        isFilled: true,
+      ),
+  };
 }
+
+// ─── 투명 자리 확보 버튼 ──────────────────────────────────────────────────────
+
+class _InvisibleButton extends StatelessWidget {
+  const _InvisibleButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(width: 48, height: 48);
+  }
+}
+
+// ─── 사이드 버튼 ──────────────────────────────────────────────────────────────
 
 class _SideButton extends StatelessWidget {
   const _SideButton({
