@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:mediapipe_genai/mediapipe_genai.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'package:voicelog_ai/core/constants/prompts.dart';
 import 'package:voicelog_ai/core/utils/logger.dart';
 import 'package:voicelog_ai/features/diary/domain/i_llm_inference_service.dart';
 
@@ -19,9 +20,7 @@ class MediaPipeLlmInferenceService implements ILlmInferenceService {
   LlmInferenceEngine? _engine;
   bool _isReady = false;
 
-  /// 추론 모델 파일명 (INT4 양자화 CPU 최적화 버전).
-  static const String _modelFileName = 'gemma-2b-it-cpu-int4.bin';
-  static const String _modelsSubDir = 'models';
+  // 모델 파일명은 prompts.dart의 kModelFileName / kModelSubDir 상수를 사용한다.
 
   @override
   bool get isReady => _isReady;
@@ -97,13 +96,13 @@ class MediaPipeLlmInferenceService implements ILlmInferenceService {
   /// 모델 파일은 앱 최초 실행 시 다운로드 후 이 위치에 저장된다.
   Future<String> _getModelPath() async {
     final dir = await getApplicationDocumentsDirectory();
-    return '${dir.path}/$_modelsSubDir/$_modelFileName';
+    return '${dir.path}/$kModelSubDir/$kModelFileName';
   }
 
   /// CPU 모드에서 컴파일된 모델 캐시를 저장할 디렉터리 경로를 반환한다.
   Future<String> _getCacheDir() async {
     final dir = await getApplicationDocumentsDirectory();
-    return '${dir.path}/$_modelsSubDir/cache';
+    return '${dir.path}/$kModelSubDir/cache';
   }
 
   @override
