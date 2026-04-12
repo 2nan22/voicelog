@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Voicelog AI - 일기 상세 및 분석</title>
+<!-- Fonts: Pretendard for Korean readability -->
+<link as="style" crossorigin="" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-low": "#f0f4f8",
+                      "surface-container": "#eaeef2",
+                      "on-tertiary": "#ffffff",
+                      "on-primary-fixed": "#001551",
+                      "on-secondary": "#ffffff",
+                      "surface-dim": "#d6dade",
+                      "on-primary": "#ffffff",
+                      "primary": "#0d46d1",
+                      "surface-bright": "#f6fafe",
+                      "surface": "#f6fafe",
+                      "on-primary-fixed-variant": "#0039b5",
+                      "on-background": "#171c1f",
+                      "on-surface-variant": "#434655",
+                      "on-secondary-container": "#fffbff",
+                      "on-primary-container": "#efefff",
+                      "secondary": "#4648d4",
+                      "on-secondary-fixed": "#07006c",
+                      "inverse-primary": "#b7c4ff",
+                      "tertiary-fixed-dim": "#4edea3",
+                      "secondary-fixed-dim": "#c0c1ff",
+                      "on-tertiary-container": "#bdffdb",
+                      "tertiary-container": "#007d55",
+                      "primary-fixed": "#dce1ff",
+                      "on-error-container": "#93000a",
+                      "surface-container-highest": "#dfe3e7",
+                      "primary-container": "#3761ea",
+                      "on-error": "#ffffff",
+                      "secondary-container": "#6063ee",
+                      "background": "#f6fafe",
+                      "inverse-surface": "#2c3134",
+                      "on-surface": "#171c1f",
+                      "primary-fixed-dim": "#b7c4ff",
+                      "outline-variant": "#c3c6d7",
+                      "surface-container-lowest": "#ffffff",
+                      "outline": "#737686",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-fixed": "#002113",
+                      "tertiary-fixed": "#6ffbbe",
+                      "error": "#ba1a1a",
+                      "secondary-fixed": "#e1e0ff",
+                      "inverse-on-surface": "#edf1f5",
+                      "surface-variant": "#dfe3e7",
+                      "surface-tint": "#2151da",
+                      "surface-container-high": "#e4e9ed",
+                      "on-secondary-fixed-variant": "#2f2ebe",
+                      "tertiary": "#006242",
+                      "on-tertiary-fixed-variant": "#005236"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "sans": ["Pretendard", "Inter", "sans-serif"],
+                      "headline": ["Pretendard", "sans-serif"],
+                      "body": ["Pretendard", "sans-serif"],
+                      "label": ["Pretendard", "sans-serif"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f6fafe;
+            line-height: 1.6;
+        }
+        .prose p {
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            word-break: keep-all;
+        }
+    </style>
+</head>
+<body class="text-on-surface selection:bg-primary/10">
+<!-- 상단 내비게이션 -->
+<header class="fixed top-0 w-full z-50 bg-slate-50/80 backdrop-blur-xl flex justify-between items-center px-6 py-4">
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-blue-50 transition-colors rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-blue-700" data-icon="arrow_back">arrow_back</span>
+</button>
+<span class="text-xl font-bold tracking-tight text-blue-700">Voicelog AI</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="p-2 hover:bg-blue-50 transition-colors rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-500" data-icon="share">share</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden">
+<img alt="프로필" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2PHqWoeAqjzjdnENtnZIUn3attEI3poJuwmDrerjaoE1g3FNu2UTRQOIlwgB1j5pOhLBVoCIw1CcpoYLaZOnBMxPt2NqsaWtwSUpXRALnYbcdEI7a5fhvfVih4RK6SEEzkeC0Zxr-9JzlDIm_a5vjVa-RJ9aIrhZlOT3E2Y4so7SY7qu27dC6kYtAvVTU_cJYGRz7rzBGzNRvHkqiP3ZUXbvHcsFJu8nhozzw9dmFrLDw8KWrC4vZvIZUZ0ZGnzx40QxMdSY5FTOQ"/>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-2xl mx-auto">
+<!-- 헤더: 날짜 및 기분 -->
+<section class="mb-14">
+<p class="text-blue-700 font-bold tracking-widest text-xs mb-3 uppercase">오늘의 기록</p>
+<h1 class="text-3xl md:text-4xl font-extrabold text-on-surface leading-tight tracking-tight mb-6">
+            4월 12일 월요일 <span class="text-slate-300 mx-2">|</span> <span class="text-tertiary">평온한 하루</span>
+</h1>
+<div class="flex flex-wrap gap-3">
+<span class="px-4 py-1.5 bg-tertiary-fixed text-on-tertiary-fixed rounded-full text-[11px] font-bold flex items-center gap-2 tracking-tighter">
+<span class="material-symbols-outlined text-sm" data-icon="sunny">sunny</span>
+                아침의 분위기
+            </span>
+<span class="px-4 py-1.5 bg-surface-container-high text-on-surface-variant rounded-full text-[11px] font-bold tracking-tighter">
+                오후 12:42
+            </span>
+</div>
+</section>
+<!-- AI 분석 섹션 (매거진 스타일 레이아웃) -->
+<section class="grid grid-cols-1 gap-6 mb-16">
+<!-- AI Reflection -->
+<div class="relative overflow-hidden bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<h3 class="font-bold text-base tracking-tight">AI의 한마디</h3>
+</div>
+<p class="text-on-surface leading-[1.8] text-lg font-medium text-slate-700 italic">
+                "오늘 당신은 일상의 작은 순간들 속에서 평온을 찾으셨네요. 창밖의 빗소리에 집중하며 마음을 가다듬은 모습은, 바쁜 한 주 끝에 스스로를 돌보는 아주 훌륭한 방법이었습니다."
+            </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- 감정 태그 -->
+<div class="bg-tertiary text-on-tertiary p-6 rounded-2xl flex flex-col justify-between aspect-square md:aspect-auto">
+<div>
+<span class="text-[10px] font-bold tracking-[0.2em] uppercase opacity-70">주요 감정</span>
+<h4 class="text-2xl font-bold mt-2">평온함 (Serenity)</h4>
+</div>
+<div class="flex justify-end">
+<span class="material-symbols-outlined text-6xl opacity-20" data-icon="psychology_alt">psychology_alt</span>
+</div>
+</div>
+<!-- 키워드 -->
+<div class="bg-surface-container-low p-6 rounded-2xl flex flex-col">
+<span class="text-[10px] font-bold tracking-[0.2em] uppercase text-slate-500 mb-4">주요 키워드</span>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1.5 bg-white rounded-lg text-xs font-semibold border border-slate-200 text-slate-700">#빗소리</span>
+<span class="px-3 py-1.5 bg-white rounded-lg text-xs font-semibold border border-slate-200 text-slate-700">#감사</span>
+<span class="px-3 py-1.5 bg-white rounded-lg text-xs font-semibold border border-slate-200 text-slate-700">#자연</span>
+<span class="px-3 py-1.5 bg-white rounded-lg text-xs font-semibold border border-slate-200 text-slate-700">#몰입</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 일기 본문 -->
+<article class="prose prose-slate max-w-none mb-20">
+<div class="space-y-10">
+<p class="text-xl md:text-2xl text-on-surface-variant font-normal leading-[1.9] tracking-tight">
+                아침은 창문을 두드리는 부드럽고 꾸준한 빗소리와 함께 시작되었습니다. 평소라면 조금 몸이 무겁게 느껴졌을 텐데, 오늘은 그 소리가 마치 천천히 하루를 시작하라는 다정한 초대처럼 느껴졌습니다. 커피 한 잔을 손에 쥐고 15분 동안 가만히 앉아, 유리창을 타고 흘러내리는 빗방울을 바라보았습니다.
+            </p>
+<p class="text-xl md:text-2xl text-on-surface-variant font-normal leading-[1.9] tracking-tight text-justify">
+                문득 지난 한 달 동안 보이지 않는 결승선을 향해 너무 급하게 달려왔다는 사실을 깨달았습니다. 빗소리는 자연스러운 화이트 노이즈가 되어 엉켜있던 생각들을 하나둘 풀어주었습니다. 이 강제적인 멈춤의 시간에 깊은 감사를 느꼈습니다. 일과는 여전히 바빴지만, 아침에 가다듬은 그 평온함 덕분에 하루 종일 차분함을 유지할 수 있었습니다.
+            </p>
+<p class="text-xl md:text-2xl text-on-surface-variant font-normal leading-[1.9] tracking-tight">
+                오늘 밤은 마음이 한결 가볍습니다. 날씨를 장애물이 아닌 동반자로 생각하는 작은 관점의 변화만으로도 하루의 에너지가 이렇게 달라질 수 있다는 것이 놀랍습니다. 이 고요한 감각을 내일까지 잘 간직하고 싶습니다.
+            </p>
+</div>
+</article>
+<!-- 시각적 요소 -->
+<div class="w-full h-56 rounded-2xl overflow-hidden mb-20 relative shadow-inner">
+<img alt="빗방울" class="w-full h-full object-cover grayscale opacity-50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmIMgBenL1cqiNwlgwSuInhMUNTgxsQM0LpuOBP6d3RaFh4dnRfubDBnmUGOk037rYnjxwOnx-1en_kCoyde8U9XuVfhzXjn69_DIVuu-33gmHZk8AEQxL9YtQOvAF6-sVQzwC1XDMcO3FDY-ilmk7afv_20Jjwab2ahmHOfFUJ39yS4WboP2i7vgxWxuyJ4KWlDZ769qaNPrGyByl1lOlhrjRzLkjEwG1NtR_l8SOKp5sVzCWP2cgkZN496WWPoioJ2Q4OKFF8f7D"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent"></div>
+</div>
+<!-- 음성 및 텍스트 원본 -->
+<section class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+<button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="mic">mic</span>
+<span class="font-bold text-sm tracking-tight">음성 기록 및 원본 텍스트</span>
+</div>
+<span class="material-symbols-outlined text-slate-400" data-icon="expand_more">expand_more</span>
+</button>
+<div class="px-8 pb-8">
+<!-- 재생바 -->
+<div class="bg-surface-container-low p-4 rounded-full flex items-center gap-4 mb-6">
+<button class="w-10 h-10 bg-primary text-on-primary rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="play_arrow" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<div class="flex-1 h-1.5 bg-slate-200 rounded-full relative">
+<div class="absolute left-0 top-0 h-full w-1/3 bg-primary rounded-full"></div>
+</div>
+<span class="text-[10px] font-mono text-slate-500">01:42</span>
+</div>
+<!-- 원본 텍스트 -->
+<div class="p-6 bg-surface-container rounded-xl">
+<p class="text-sm text-on-surface-variant leading-relaxed opacity-80">
+                    "음, 그러니까... 오늘은 비가 오네요. 월요일 아침이고요. 근데 기분이 꽤 좋아요. 커피 마시면서 그냥 앉아 있어요. 평화롭달까. 서두를 필요가 없다고 느껴져요. 요즘 너무 바쁘게만 지냈거든요. 빗소리가 참 좋네요. 일이 바빠져도 이 기분을 하루 종일 유지할 수 있으면 좋겠어요..."
+                </p>
+</div>
+</div>
+</section>
+</main>
+<!-- 하단 내비게이션 바 -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-8 pt-4 bg-slate-50/80 backdrop-blur-2xl z-50 rounded-t-[2.5rem] shadow-[0_-8px_40px_rgba(0,0,0,0.04)] border-t border-slate-100">
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-blue-600 transition-colors px-4 py-2" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
+<span class="text-[10px] font-bold tracking-tight">홈</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-blue-600 transition-colors px-4 py-2" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="mic">mic</span>
+<span class="text-[10px] font-bold tracking-tight">기록하기</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-blue-100 text-blue-800 rounded-full px-5 py-2 scale-90" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="insights" style="font-variation-settings: 'FILL' 1;">insights</span>
+<span class="text-[10px] font-bold tracking-tight">심층 분석</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-blue-600 transition-colors px-4 py-2" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="settings">settings</span>
+<span class="text-[10px] font-bold tracking-tight">설정</span>
+</a>
+</nav>
+<!-- 부동 편집 버튼 -->
+<div class="fixed bottom-28 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-transform z-40">
+<div class="absolute inset-0 bg-primary-container opacity-20 animate-pulse rounded-full"></div>
+<span class="material-symbols-outlined relative z-10" data-icon="edit">edit</span>
+</div>
+</body></html>

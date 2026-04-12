@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>보이스로그 AI - 홈</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link as="style" crossorigin="" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#3182F6", // 디자인 시스템 기반 (토스/삼성 스타일 블루)
+                        "surface-container-low": "#F2F4F6",
+                        "surface-container": "#E5E8EB",
+                        "on-surface": "#191F28",
+                        "on-surface-variant": "#4E5968",
+                        "on-primary": "#ffffff",
+                        "background": "#F9FAFB",
+                        "outline-variant": "#E5E8EB"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "18px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "sans": ["Pretendard", "-apple-system", "BlinkMacSystemFont", "system-ui", "Roboto", "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "sans-serif"],
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { 
+            font-family: 'Pretendard', sans-serif; 
+            letter-spacing: -0.02em;
+            -webkit-font-smoothing: antialiased;
+        }
+        .ios-blur {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .day-active {
+            box-shadow: 0 4px 12px rgba(49, 130, 246, 0.25);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen pb-32">
+<!-- 상단 앱바 -->
+<header class="fixed top-0 w-full z-50 bg-white/80 ios-blur flex justify-between items-center px-5 py-4 border-b border-gray-100">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface" data-icon="menu">menu</span>
+<h1 class="text-lg font-bold tracking-tight text-primary">보이스로그 AI</h1>
+</div>
+<div class="w-9 h-9 rounded-full overflow-hidden bg-surface-container border border-gray-200">
+<img alt="사용자 프로필" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDk8jc4GEeEN-jInnkNs5Gca7MH2zt8nMIbSMc7opbXK_jhG6-tclDFxKfi8s-Jg2X9hbib6XduOAg6PW3O4Gs8zqJciJG8GMgjAX6nPtlpUkREk-MTtxZoHT8V5Hd17erWmCwZTK7JIunmLo8PzG1xqlWIV15pjkkgE-liU9f3Pr5lj2NuvEgk0pf4uZuWDVxW4lotx969kVn7uigyzRiO9T5k1vLbWSAVq3LSsTc_6_oJ0MPA035ZL19TCpQtPgJ2k6MJ6aQa0ibI"/>
+</div>
+</header>
+<main class="pt-20 px-5 max-w-2xl mx-auto space-y-8">
+<!-- 캘린더 섹션 -->
+<section>
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-xl font-bold">2024년 9월</h2>
+<div class="flex gap-1">
+<button class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant text-xl" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant text-xl" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+<div class="grid grid-cols-7 gap-y-3 text-center">
+<!-- 요일 -->
+<div class="text-xs font-semibold text-gray-400">일</div>
+<div class="text-xs font-semibold text-gray-400">월</div>
+<div class="text-xs font-semibold text-gray-400">화</div>
+<div class="text-xs font-semibold text-gray-400">수</div>
+<div class="text-xs font-semibold text-gray-400">목</div>
+<div class="text-xs font-semibold text-gray-400">금</div>
+<div class="text-xs font-semibold text-gray-400">토</div>
+<!-- 날짜 예시 -->
+<div class="py-2 text-gray-200 text-sm">28</div>
+<div class="py-2 text-gray-200 text-sm">29</div>
+<div class="py-2 text-gray-200 text-sm">30</div>
+<div class="py-2 text-gray-200 text-sm">31</div>
+<div class="py-2 text-sm relative flex flex-col items-center">1<span class="w-1 h-1 rounded-full bg-primary/40 mt-1"></span></div>
+<div class="py-2 text-sm">2</div>
+<div class="py-2 text-sm">3</div>
+<div class="py-2 text-sm">4</div>
+<div class="py-2 text-sm relative flex flex-col items-center">5<span class="w-1 h-1 rounded-full bg-primary/40 mt-1"></span></div>
+<div class="py-2 text-sm">6</div>
+<div class="py-2 font-bold bg-primary text-white rounded-full mx-auto w-9 h-9 flex items-center justify-center day-active text-sm">7</div>
+<div class="py-2 text-sm relative flex flex-col items-center">8<span class="w-1 h-1 rounded-full bg-primary/40 mt-1"></span></div>
+<div class="py-2 text-sm">9</div>
+<div class="py-2 text-sm">10</div>
+</div>
+</div>
+</section>
+<!-- 퀵 인사이트 벤토 -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<div class="bg-primary p-6 rounded-2xl text-white shadow-sm">
+<div class="flex items-center gap-2 mb-3 opacity-90">
+<span class="material-symbols-outlined text-lg" data-icon="bolt">bolt</span>
+<span class="text-xs font-bold tracking-wide uppercase">연속 기록</span>
+</div>
+<p class="text-3xl font-extrabold mb-1">3일째</p>
+<p class="text-white/80 text-[13px] leading-snug">깊은 사색을 이어가고 계시네요.<br/>지금의 흐름을 놓치지 마세요!</p>
+</div>
+<div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="psychology">psychology</span>
+<span class="text-xs font-bold tracking-wide text-on-surface-variant uppercase">이번 주 기분</span>
+</div>
+<p class="text-xl font-bold text-on-surface mb-2">차분함 &amp; 집중</p>
+<div class="flex items-center gap-1.5 mt-3">
+<div class="h-2 w-1/2 bg-primary/20 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-full"></div>
+</div>
+<div class="h-2 w-1/4 bg-gray-100 rounded-full"></div>
+<div class="h-2 w-1/4 bg-gray-100 rounded-full"></div>
+</div>
+</div>
+</section>
+<!-- 최근 로그 -->
+<section>
+<div class="flex justify-between items-center mb-5">
+<h2 class="text-xl font-bold">최근 기록</h2>
+<button class="text-primary text-sm font-bold px-2 py-1">전체보기</button>
+</div>
+<div class="space-y-4">
+<!-- 항목 1 -->
+<div class="bg-white p-5 rounded-2xl border border-gray-50 shadow-sm transition-transform active:scale-[0.98]">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+<span class="material-symbols-outlined" data-icon="sentiment_satisfied" style="font-variation-settings: 'FILL' 1;">sentiment_satisfied</span>
+</div>
+<div>
+<h3 class="font-bold text-[16px] text-on-surface">강변 저녁 산책</h3>
+<p class="text-[12px] text-on-surface-variant font-medium">오늘 • 오후 8:30</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-gray-300" data-icon="more_horiz">more_horiz</span>
+</div>
+<p class="text-on-surface-variant text-[14px] leading-relaxed line-clamp-2 mb-4">
+                    공기가 차갑고 비 냄새가 났다. 강물이 흐르는 걸 보면서 마음이 정말 맑아지는 기분이었다. 이런 순간들이 나에게...
+                </p>
+<div class="flex gap-2">
+<span class="px-2.5 py-1 rounded-lg bg-gray-100 text-[11px] font-bold text-on-surface-variant">#자연</span>
+<span class="px-2.5 py-1 rounded-lg bg-gray-100 text-[11px] font-bold text-on-surface-variant">#명상</span>
+</div>
+</div>
+<!-- 항목 2 -->
+<div class="bg-white p-5 rounded-2xl border border-gray-50 shadow-sm transition-transform active:scale-[0.98]">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div>
+<h3 class="font-bold text-[16px] text-on-surface">업무상 큰 돌파구</h3>
+<p class="text-[12px] text-on-surface-variant font-medium">어제 • 오전 11:15</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-gray-300" data-icon="more_horiz">more_horiz</span>
+</div>
+<p class="text-on-surface-variant text-[14px] leading-relaxed line-clamp-2 mb-4">
+                    몇 주 동안 아키텍처 설계로 고민했는데, 오늘 오전 회의 중에 해결책이 갑자기 떠올랐다. 다시 열정이 샘솟는...
+                </p>
+<div class="flex gap-2">
+<span class="px-2.5 py-1 rounded-lg bg-gray-100 text-[11px] font-bold text-on-surface-variant">#워크</span>
+<span class="px-2.5 py-1 rounded-lg bg-gray-100 text-[11px] font-bold text-on-surface-variant">#생산성</span>
+</div>
+</div>
+<!-- 항목 3 -->
+<div class="bg-white p-5 rounded-2xl border border-gray-50 shadow-sm transition-transform active:scale-[0.98]">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+<span class="material-symbols-outlined" data-icon="bedtime" style="font-variation-settings: 'FILL' 1;">bedtime</span>
+</div>
+<div>
+<h3 class="font-bold text-[16px] text-on-surface">늦은 밤의 생각들</h3>
+<p class="text-[12px] text-on-surface-variant font-medium">9월 5일 • 오후 11:45</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-gray-300" data-icon="more_horiz">more_horiz</span>
+</div>
+<p class="text-on-surface-variant text-[14px] leading-relaxed line-clamp-2 mb-4">
+                    다가오는 여행에 대해 생각 중. 설렘과 불안이 섞여 있다. 내가 통제할 수 있는 일들에만 집중해야겠다...
+                </p>
+<div class="flex gap-2">
+<span class="px-2.5 py-1 rounded-lg bg-gray-100 text-[11px] font-bold text-on-surface-variant">#여행</span>
+<span class="px-2.5 py-1 rounded-lg bg-gray-100 text-[11px] font-bold text-on-surface-variant">#성찰</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- 하단 네비게이션 -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 pb-8 pt-3 bg-white/90 ios-blur z-50 border-t border-gray-100">
+<div class="flex flex-col items-center justify-center text-primary px-4 py-1">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="text-[10px] font-bold mt-1">홈</span>
+</div>
+<div class="flex flex-col items-center justify-center text-gray-400 px-4 py-1">
+<span class="material-symbols-outlined" data-icon="mic">mic</span>
+<span class="text-[10px] font-medium mt-1">기록</span>
+</div>
+<div class="flex flex-col items-center justify-center text-gray-400 px-4 py-1">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+<span class="text-[10px] font-medium mt-1">인사이트</span>
+</div>
+<div class="flex flex-col items-center justify-center text-gray-400 px-4 py-1">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-[10px] font-medium mt-1">설정</span>
+</div>
+</nav>
+<!-- 녹음 플로팅 버튼 -->
+<button class="fixed right-6 bottom-32 w-14 h-14 rounded-full bg-primary text-white shadow-lg shadow-primary/30 flex items-center justify-center z-40 transition-transform active:scale-90">
+<span class="material-symbols-outlined text-2xl" data-icon="mic" style="font-variation-settings: 'FILL' 1;">mic</span>
+</button>
+</body></html>

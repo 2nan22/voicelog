@@ -26,6 +26,10 @@
 | Session 12 | `session_12_logs_tab.md` | ShellRoute 탭 네비 리팩토링, Logs 월별 타임라인 |
 | Session 13 | `session_13_insight_tab.md` | 감정 도넛 차트, 스트릭, 태그 빈도 Insight 화면 |
 | Session 14 | `session_14_profile_tab.md` | 앱 통계, 모델 정보, 전체 삭제, Profile 화면 |
+| Session 15 | `_complete/session_15_bugfix.md` | 버그 수정 |
+| Session 16 | `_complete/session_16_record_home_v2.md` | 문체 선택, 녹음 화면 STT/LLM 카드 분리, 파형 연동 |
+| Session 17 | `_complete/session_17_home_calendar.md` | 홈 화면 캘린더 뷰로 교체 (table_calendar) |
+| Session 18 | `session_18_ui_stitch_v2.md` | Stitch v0.0.2 기반 UI 전면 개선 (4 꼭지) |
 
 ---
 
