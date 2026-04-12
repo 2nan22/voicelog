@@ -20,34 +20,24 @@ mixin _$ModelDownloadState {
   TResult when<TResult extends Object?>({
     required TResult Function() idle,
     required TResult Function() checking,
-    required TResult Function() alreadyExists,
-    required TResult Function(
-            double progress, int receivedBytes, int totalBytes)
-        downloading,
-    required TResult Function() done,
-    required TResult Function(String message) error,
+    required TResult Function() exists,
+    required TResult Function(String modelPath) missing,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? idle,
     TResult? Function()? checking,
-    TResult? Function()? alreadyExists,
-    TResult? Function(double progress, int receivedBytes, int totalBytes)?
-        downloading,
-    TResult? Function()? done,
-    TResult? Function(String message)? error,
+    TResult? Function()? exists,
+    TResult? Function(String modelPath)? missing,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? idle,
     TResult Function()? checking,
-    TResult Function()? alreadyExists,
-    TResult Function(double progress, int receivedBytes, int totalBytes)?
-        downloading,
-    TResult Function()? done,
-    TResult Function(String message)? error,
+    TResult Function()? exists,
+    TResult Function(String modelPath)? missing,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -55,30 +45,24 @@ mixin _$ModelDownloadState {
   TResult map<TResult extends Object?>({
     required TResult Function(ModelDownloadIdle value) idle,
     required TResult Function(ModelDownloadChecking value) checking,
-    required TResult Function(ModelDownloadAlreadyExists value) alreadyExists,
-    required TResult Function(ModelDownloading value) downloading,
-    required TResult Function(ModelDownloadDone value) done,
-    required TResult Function(ModelDownloadError value) error,
+    required TResult Function(ModelDownloadExists value) exists,
+    required TResult Function(ModelDownloadMissing value) missing,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(ModelDownloadIdle value)? idle,
     TResult? Function(ModelDownloadChecking value)? checking,
-    TResult? Function(ModelDownloadAlreadyExists value)? alreadyExists,
-    TResult? Function(ModelDownloading value)? downloading,
-    TResult? Function(ModelDownloadDone value)? done,
-    TResult? Function(ModelDownloadError value)? error,
+    TResult? Function(ModelDownloadExists value)? exists,
+    TResult? Function(ModelDownloadMissing value)? missing,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(ModelDownloadIdle value)? idle,
     TResult Function(ModelDownloadChecking value)? checking,
-    TResult Function(ModelDownloadAlreadyExists value)? alreadyExists,
-    TResult Function(ModelDownloading value)? downloading,
-    TResult Function(ModelDownloadDone value)? done,
-    TResult Function(ModelDownloadError value)? error,
+    TResult Function(ModelDownloadExists value)? exists,
+    TResult Function(ModelDownloadMissing value)? missing,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -142,12 +126,8 @@ class _$ModelDownloadIdleImpl implements ModelDownloadIdle {
   TResult when<TResult extends Object?>({
     required TResult Function() idle,
     required TResult Function() checking,
-    required TResult Function() alreadyExists,
-    required TResult Function(
-            double progress, int receivedBytes, int totalBytes)
-        downloading,
-    required TResult Function() done,
-    required TResult Function(String message) error,
+    required TResult Function() exists,
+    required TResult Function(String modelPath) missing,
   }) {
     return idle();
   }
@@ -157,11 +137,8 @@ class _$ModelDownloadIdleImpl implements ModelDownloadIdle {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? idle,
     TResult? Function()? checking,
-    TResult? Function()? alreadyExists,
-    TResult? Function(double progress, int receivedBytes, int totalBytes)?
-        downloading,
-    TResult? Function()? done,
-    TResult? Function(String message)? error,
+    TResult? Function()? exists,
+    TResult? Function(String modelPath)? missing,
   }) {
     return idle?.call();
   }
@@ -171,11 +148,8 @@ class _$ModelDownloadIdleImpl implements ModelDownloadIdle {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? idle,
     TResult Function()? checking,
-    TResult Function()? alreadyExists,
-    TResult Function(double progress, int receivedBytes, int totalBytes)?
-        downloading,
-    TResult Function()? done,
-    TResult Function(String message)? error,
+    TResult Function()? exists,
+    TResult Function(String modelPath)? missing,
     required TResult orElse(),
   }) {
     if (idle != null) {
@@ -189,10 +163,8 @@ class _$ModelDownloadIdleImpl implements ModelDownloadIdle {
   TResult map<TResult extends Object?>({
     required TResult Function(ModelDownloadIdle value) idle,
     required TResult Function(ModelDownloadChecking value) checking,
-    required TResult Function(ModelDownloadAlreadyExists value) alreadyExists,
-    required TResult Function(ModelDownloading value) downloading,
-    required TResult Function(ModelDownloadDone value) done,
-    required TResult Function(ModelDownloadError value) error,
+    required TResult Function(ModelDownloadExists value) exists,
+    required TResult Function(ModelDownloadMissing value) missing,
   }) {
     return idle(this);
   }
@@ -202,10 +174,8 @@ class _$ModelDownloadIdleImpl implements ModelDownloadIdle {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(ModelDownloadIdle value)? idle,
     TResult? Function(ModelDownloadChecking value)? checking,
-    TResult? Function(ModelDownloadAlreadyExists value)? alreadyExists,
-    TResult? Function(ModelDownloading value)? downloading,
-    TResult? Function(ModelDownloadDone value)? done,
-    TResult? Function(ModelDownloadError value)? error,
+    TResult? Function(ModelDownloadExists value)? exists,
+    TResult? Function(ModelDownloadMissing value)? missing,
   }) {
     return idle?.call(this);
   }
@@ -215,10 +185,8 @@ class _$ModelDownloadIdleImpl implements ModelDownloadIdle {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(ModelDownloadIdle value)? idle,
     TResult Function(ModelDownloadChecking value)? checking,
-    TResult Function(ModelDownloadAlreadyExists value)? alreadyExists,
-    TResult Function(ModelDownloading value)? downloading,
-    TResult Function(ModelDownloadDone value)? done,
-    TResult Function(ModelDownloadError value)? error,
+    TResult Function(ModelDownloadExists value)? exists,
+    TResult Function(ModelDownloadMissing value)? missing,
     required TResult orElse(),
   }) {
     if (idle != null) {
@@ -274,12 +242,8 @@ class _$ModelDownloadCheckingImpl implements ModelDownloadChecking {
   TResult when<TResult extends Object?>({
     required TResult Function() idle,
     required TResult Function() checking,
-    required TResult Function() alreadyExists,
-    required TResult Function(
-            double progress, int receivedBytes, int totalBytes)
-        downloading,
-    required TResult Function() done,
-    required TResult Function(String message) error,
+    required TResult Function() exists,
+    required TResult Function(String modelPath) missing,
   }) {
     return checking();
   }
@@ -289,11 +253,8 @@ class _$ModelDownloadCheckingImpl implements ModelDownloadChecking {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? idle,
     TResult? Function()? checking,
-    TResult? Function()? alreadyExists,
-    TResult? Function(double progress, int receivedBytes, int totalBytes)?
-        downloading,
-    TResult? Function()? done,
-    TResult? Function(String message)? error,
+    TResult? Function()? exists,
+    TResult? Function(String modelPath)? missing,
   }) {
     return checking?.call();
   }
@@ -303,11 +264,8 @@ class _$ModelDownloadCheckingImpl implements ModelDownloadChecking {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? idle,
     TResult Function()? checking,
-    TResult Function()? alreadyExists,
-    TResult Function(double progress, int receivedBytes, int totalBytes)?
-        downloading,
-    TResult Function()? done,
-    TResult Function(String message)? error,
+    TResult Function()? exists,
+    TResult Function(String modelPath)? missing,
     required TResult orElse(),
   }) {
     if (checking != null) {
@@ -321,10 +279,8 @@ class _$ModelDownloadCheckingImpl implements ModelDownloadChecking {
   TResult map<TResult extends Object?>({
     required TResult Function(ModelDownloadIdle value) idle,
     required TResult Function(ModelDownloadChecking value) checking,
-    required TResult Function(ModelDownloadAlreadyExists value) alreadyExists,
-    required TResult Function(ModelDownloading value) downloading,
-    required TResult Function(ModelDownloadDone value) done,
-    required TResult Function(ModelDownloadError value) error,
+    required TResult Function(ModelDownloadExists value) exists,
+    required TResult Function(ModelDownloadMissing value) missing,
   }) {
     return checking(this);
   }
@@ -334,10 +290,8 @@ class _$ModelDownloadCheckingImpl implements ModelDownloadChecking {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(ModelDownloadIdle value)? idle,
     TResult? Function(ModelDownloadChecking value)? checking,
-    TResult? Function(ModelDownloadAlreadyExists value)? alreadyExists,
-    TResult? Function(ModelDownloading value)? downloading,
-    TResult? Function(ModelDownloadDone value)? done,
-    TResult? Function(ModelDownloadError value)? error,
+    TResult? Function(ModelDownloadExists value)? exists,
+    TResult? Function(ModelDownloadMissing value)? missing,
   }) {
     return checking?.call(this);
   }
@@ -347,10 +301,8 @@ class _$ModelDownloadCheckingImpl implements ModelDownloadChecking {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(ModelDownloadIdle value)? idle,
     TResult Function(ModelDownloadChecking value)? checking,
-    TResult Function(ModelDownloadAlreadyExists value)? alreadyExists,
-    TResult Function(ModelDownloading value)? downloading,
-    TResult Function(ModelDownloadDone value)? done,
-    TResult Function(ModelDownloadError value)? error,
+    TResult Function(ModelDownloadExists value)? exists,
+    TResult Function(ModelDownloadMissing value)? missing,
     required TResult orElse(),
   }) {
     if (checking != null) {
@@ -365,39 +317,36 @@ abstract class ModelDownloadChecking implements ModelDownloadState {
 }
 
 /// @nodoc
-abstract class _$$ModelDownloadAlreadyExistsImplCopyWith<$Res> {
-  factory _$$ModelDownloadAlreadyExistsImplCopyWith(
-          _$ModelDownloadAlreadyExistsImpl value,
-          $Res Function(_$ModelDownloadAlreadyExistsImpl) then) =
-      __$$ModelDownloadAlreadyExistsImplCopyWithImpl<$Res>;
+abstract class _$$ModelDownloadExistsImplCopyWith<$Res> {
+  factory _$$ModelDownloadExistsImplCopyWith(_$ModelDownloadExistsImpl value,
+          $Res Function(_$ModelDownloadExistsImpl) then) =
+      __$$ModelDownloadExistsImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
-class __$$ModelDownloadAlreadyExistsImplCopyWithImpl<$Res>
-    extends _$ModelDownloadStateCopyWithImpl<$Res,
-        _$ModelDownloadAlreadyExistsImpl>
-    implements _$$ModelDownloadAlreadyExistsImplCopyWith<$Res> {
-  __$$ModelDownloadAlreadyExistsImplCopyWithImpl(
-      _$ModelDownloadAlreadyExistsImpl _value,
-      $Res Function(_$ModelDownloadAlreadyExistsImpl) _then)
+class __$$ModelDownloadExistsImplCopyWithImpl<$Res>
+    extends _$ModelDownloadStateCopyWithImpl<$Res, _$ModelDownloadExistsImpl>
+    implements _$$ModelDownloadExistsImplCopyWith<$Res> {
+  __$$ModelDownloadExistsImplCopyWithImpl(_$ModelDownloadExistsImpl _value,
+      $Res Function(_$ModelDownloadExistsImpl) _then)
       : super(_value, _then);
 }
 
 /// @nodoc
 
-class _$ModelDownloadAlreadyExistsImpl implements ModelDownloadAlreadyExists {
-  const _$ModelDownloadAlreadyExistsImpl();
+class _$ModelDownloadExistsImpl implements ModelDownloadExists {
+  const _$ModelDownloadExistsImpl();
 
   @override
   String toString() {
-    return 'ModelDownloadState.alreadyExists()';
+    return 'ModelDownloadState.exists()';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ModelDownloadAlreadyExistsImpl);
+            other is _$ModelDownloadExistsImpl);
   }
 
   @override
@@ -408,14 +357,10 @@ class _$ModelDownloadAlreadyExistsImpl implements ModelDownloadAlreadyExists {
   TResult when<TResult extends Object?>({
     required TResult Function() idle,
     required TResult Function() checking,
-    required TResult Function() alreadyExists,
-    required TResult Function(
-            double progress, int receivedBytes, int totalBytes)
-        downloading,
-    required TResult Function() done,
-    required TResult Function(String message) error,
+    required TResult Function() exists,
+    required TResult Function(String modelPath) missing,
   }) {
-    return alreadyExists();
+    return exists();
   }
 
   @override
@@ -423,13 +368,10 @@ class _$ModelDownloadAlreadyExistsImpl implements ModelDownloadAlreadyExists {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? idle,
     TResult? Function()? checking,
-    TResult? Function()? alreadyExists,
-    TResult? Function(double progress, int receivedBytes, int totalBytes)?
-        downloading,
-    TResult? Function()? done,
-    TResult? Function(String message)? error,
+    TResult? Function()? exists,
+    TResult? Function(String modelPath)? missing,
   }) {
-    return alreadyExists?.call();
+    return exists?.call();
   }
 
   @override
@@ -437,15 +379,12 @@ class _$ModelDownloadAlreadyExistsImpl implements ModelDownloadAlreadyExists {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? idle,
     TResult Function()? checking,
-    TResult Function()? alreadyExists,
-    TResult Function(double progress, int receivedBytes, int totalBytes)?
-        downloading,
-    TResult Function()? done,
-    TResult Function(String message)? error,
+    TResult Function()? exists,
+    TResult Function(String modelPath)? missing,
     required TResult orElse(),
   }) {
-    if (alreadyExists != null) {
-      return alreadyExists();
+    if (exists != null) {
+      return exists();
     }
     return orElse();
   }
@@ -455,12 +394,10 @@ class _$ModelDownloadAlreadyExistsImpl implements ModelDownloadAlreadyExists {
   TResult map<TResult extends Object?>({
     required TResult Function(ModelDownloadIdle value) idle,
     required TResult Function(ModelDownloadChecking value) checking,
-    required TResult Function(ModelDownloadAlreadyExists value) alreadyExists,
-    required TResult Function(ModelDownloading value) downloading,
-    required TResult Function(ModelDownloadDone value) done,
-    required TResult Function(ModelDownloadError value) error,
+    required TResult Function(ModelDownloadExists value) exists,
+    required TResult Function(ModelDownloadMissing value) missing,
   }) {
-    return alreadyExists(this);
+    return exists(this);
   }
 
   @override
@@ -468,12 +405,10 @@ class _$ModelDownloadAlreadyExistsImpl implements ModelDownloadAlreadyExists {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(ModelDownloadIdle value)? idle,
     TResult? Function(ModelDownloadChecking value)? checking,
-    TResult? Function(ModelDownloadAlreadyExists value)? alreadyExists,
-    TResult? Function(ModelDownloading value)? downloading,
-    TResult? Function(ModelDownloadDone value)? done,
-    TResult? Function(ModelDownloadError value)? error,
+    TResult? Function(ModelDownloadExists value)? exists,
+    TResult? Function(ModelDownloadMissing value)? missing,
   }) {
-    return alreadyExists?.call(this);
+    return exists?.call(this);
   }
 
   @override
@@ -481,370 +416,47 @@ class _$ModelDownloadAlreadyExistsImpl implements ModelDownloadAlreadyExists {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(ModelDownloadIdle value)? idle,
     TResult Function(ModelDownloadChecking value)? checking,
-    TResult Function(ModelDownloadAlreadyExists value)? alreadyExists,
-    TResult Function(ModelDownloading value)? downloading,
-    TResult Function(ModelDownloadDone value)? done,
-    TResult Function(ModelDownloadError value)? error,
+    TResult Function(ModelDownloadExists value)? exists,
+    TResult Function(ModelDownloadMissing value)? missing,
     required TResult orElse(),
   }) {
-    if (alreadyExists != null) {
-      return alreadyExists(this);
+    if (exists != null) {
+      return exists(this);
     }
     return orElse();
   }
 }
 
-abstract class ModelDownloadAlreadyExists implements ModelDownloadState {
-  const factory ModelDownloadAlreadyExists() = _$ModelDownloadAlreadyExistsImpl;
+abstract class ModelDownloadExists implements ModelDownloadState {
+  const factory ModelDownloadExists() = _$ModelDownloadExistsImpl;
 }
 
 /// @nodoc
-abstract class _$$ModelDownloadingImplCopyWith<$Res> {
-  factory _$$ModelDownloadingImplCopyWith(_$ModelDownloadingImpl value,
-          $Res Function(_$ModelDownloadingImpl) then) =
-      __$$ModelDownloadingImplCopyWithImpl<$Res>;
+abstract class _$$ModelDownloadMissingImplCopyWith<$Res> {
+  factory _$$ModelDownloadMissingImplCopyWith(_$ModelDownloadMissingImpl value,
+          $Res Function(_$ModelDownloadMissingImpl) then) =
+      __$$ModelDownloadMissingImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({double progress, int receivedBytes, int totalBytes});
+  $Res call({String modelPath});
 }
 
 /// @nodoc
-class __$$ModelDownloadingImplCopyWithImpl<$Res>
-    extends _$ModelDownloadStateCopyWithImpl<$Res, _$ModelDownloadingImpl>
-    implements _$$ModelDownloadingImplCopyWith<$Res> {
-  __$$ModelDownloadingImplCopyWithImpl(_$ModelDownloadingImpl _value,
-      $Res Function(_$ModelDownloadingImpl) _then)
+class __$$ModelDownloadMissingImplCopyWithImpl<$Res>
+    extends _$ModelDownloadStateCopyWithImpl<$Res, _$ModelDownloadMissingImpl>
+    implements _$$ModelDownloadMissingImplCopyWith<$Res> {
+  __$$ModelDownloadMissingImplCopyWithImpl(_$ModelDownloadMissingImpl _value,
+      $Res Function(_$ModelDownloadMissingImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? progress = null,
-    Object? receivedBytes = null,
-    Object? totalBytes = null,
+    Object? modelPath = null,
   }) {
-    return _then(_$ModelDownloadingImpl(
-      progress: null == progress
-          ? _value.progress
-          : progress // ignore: cast_nullable_to_non_nullable
-              as double,
-      receivedBytes: null == receivedBytes
-          ? _value.receivedBytes
-          : receivedBytes // ignore: cast_nullable_to_non_nullable
-              as int,
-      totalBytes: null == totalBytes
-          ? _value.totalBytes
-          : totalBytes // ignore: cast_nullable_to_non_nullable
-              as int,
-    ));
-  }
-}
-
-/// @nodoc
-
-class _$ModelDownloadingImpl implements ModelDownloading {
-  const _$ModelDownloadingImpl(
-      {required this.progress,
-      required this.receivedBytes,
-      required this.totalBytes});
-
-  @override
-  final double progress;
-// 0.0 ~ 1.0
-  @override
-  final int receivedBytes;
-  @override
-  final int totalBytes;
-
-  @override
-  String toString() {
-    return 'ModelDownloadState.downloading(progress: $progress, receivedBytes: $receivedBytes, totalBytes: $totalBytes)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$ModelDownloadingImpl &&
-            (identical(other.progress, progress) ||
-                other.progress == progress) &&
-            (identical(other.receivedBytes, receivedBytes) ||
-                other.receivedBytes == receivedBytes) &&
-            (identical(other.totalBytes, totalBytes) ||
-                other.totalBytes == totalBytes));
-  }
-
-  @override
-  int get hashCode =>
-      Object.hash(runtimeType, progress, receivedBytes, totalBytes);
-
-  @JsonKey(ignore: true)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$ModelDownloadingImplCopyWith<_$ModelDownloadingImpl> get copyWith =>
-      __$$ModelDownloadingImplCopyWithImpl<_$ModelDownloadingImpl>(
-          this, _$identity);
-
-  @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function() idle,
-    required TResult Function() checking,
-    required TResult Function() alreadyExists,
-    required TResult Function(
-            double progress, int receivedBytes, int totalBytes)
-        downloading,
-    required TResult Function() done,
-    required TResult Function(String message) error,
-  }) {
-    return downloading(progress, receivedBytes, totalBytes);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? idle,
-    TResult? Function()? checking,
-    TResult? Function()? alreadyExists,
-    TResult? Function(double progress, int receivedBytes, int totalBytes)?
-        downloading,
-    TResult? Function()? done,
-    TResult? Function(String message)? error,
-  }) {
-    return downloading?.call(progress, receivedBytes, totalBytes);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? idle,
-    TResult Function()? checking,
-    TResult Function()? alreadyExists,
-    TResult Function(double progress, int receivedBytes, int totalBytes)?
-        downloading,
-    TResult Function()? done,
-    TResult Function(String message)? error,
-    required TResult orElse(),
-  }) {
-    if (downloading != null) {
-      return downloading(progress, receivedBytes, totalBytes);
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(ModelDownloadIdle value) idle,
-    required TResult Function(ModelDownloadChecking value) checking,
-    required TResult Function(ModelDownloadAlreadyExists value) alreadyExists,
-    required TResult Function(ModelDownloading value) downloading,
-    required TResult Function(ModelDownloadDone value) done,
-    required TResult Function(ModelDownloadError value) error,
-  }) {
-    return downloading(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(ModelDownloadIdle value)? idle,
-    TResult? Function(ModelDownloadChecking value)? checking,
-    TResult? Function(ModelDownloadAlreadyExists value)? alreadyExists,
-    TResult? Function(ModelDownloading value)? downloading,
-    TResult? Function(ModelDownloadDone value)? done,
-    TResult? Function(ModelDownloadError value)? error,
-  }) {
-    return downloading?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(ModelDownloadIdle value)? idle,
-    TResult Function(ModelDownloadChecking value)? checking,
-    TResult Function(ModelDownloadAlreadyExists value)? alreadyExists,
-    TResult Function(ModelDownloading value)? downloading,
-    TResult Function(ModelDownloadDone value)? done,
-    TResult Function(ModelDownloadError value)? error,
-    required TResult orElse(),
-  }) {
-    if (downloading != null) {
-      return downloading(this);
-    }
-    return orElse();
-  }
-}
-
-abstract class ModelDownloading implements ModelDownloadState {
-  const factory ModelDownloading(
-      {required final double progress,
-      required final int receivedBytes,
-      required final int totalBytes}) = _$ModelDownloadingImpl;
-
-  double get progress; // 0.0 ~ 1.0
-  int get receivedBytes;
-  int get totalBytes;
-  @JsonKey(ignore: true)
-  _$$ModelDownloadingImplCopyWith<_$ModelDownloadingImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class _$$ModelDownloadDoneImplCopyWith<$Res> {
-  factory _$$ModelDownloadDoneImplCopyWith(_$ModelDownloadDoneImpl value,
-          $Res Function(_$ModelDownloadDoneImpl) then) =
-      __$$ModelDownloadDoneImplCopyWithImpl<$Res>;
-}
-
-/// @nodoc
-class __$$ModelDownloadDoneImplCopyWithImpl<$Res>
-    extends _$ModelDownloadStateCopyWithImpl<$Res, _$ModelDownloadDoneImpl>
-    implements _$$ModelDownloadDoneImplCopyWith<$Res> {
-  __$$ModelDownloadDoneImplCopyWithImpl(_$ModelDownloadDoneImpl _value,
-      $Res Function(_$ModelDownloadDoneImpl) _then)
-      : super(_value, _then);
-}
-
-/// @nodoc
-
-class _$ModelDownloadDoneImpl implements ModelDownloadDone {
-  const _$ModelDownloadDoneImpl();
-
-  @override
-  String toString() {
-    return 'ModelDownloadState.done()';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$ModelDownloadDoneImpl);
-  }
-
-  @override
-  int get hashCode => runtimeType.hashCode;
-
-  @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function() idle,
-    required TResult Function() checking,
-    required TResult Function() alreadyExists,
-    required TResult Function(
-            double progress, int receivedBytes, int totalBytes)
-        downloading,
-    required TResult Function() done,
-    required TResult Function(String message) error,
-  }) {
-    return done();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function()? idle,
-    TResult? Function()? checking,
-    TResult? Function()? alreadyExists,
-    TResult? Function(double progress, int receivedBytes, int totalBytes)?
-        downloading,
-    TResult? Function()? done,
-    TResult? Function(String message)? error,
-  }) {
-    return done?.call();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function()? idle,
-    TResult Function()? checking,
-    TResult Function()? alreadyExists,
-    TResult Function(double progress, int receivedBytes, int totalBytes)?
-        downloading,
-    TResult Function()? done,
-    TResult Function(String message)? error,
-    required TResult orElse(),
-  }) {
-    if (done != null) {
-      return done();
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(ModelDownloadIdle value) idle,
-    required TResult Function(ModelDownloadChecking value) checking,
-    required TResult Function(ModelDownloadAlreadyExists value) alreadyExists,
-    required TResult Function(ModelDownloading value) downloading,
-    required TResult Function(ModelDownloadDone value) done,
-    required TResult Function(ModelDownloadError value) error,
-  }) {
-    return done(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(ModelDownloadIdle value)? idle,
-    TResult? Function(ModelDownloadChecking value)? checking,
-    TResult? Function(ModelDownloadAlreadyExists value)? alreadyExists,
-    TResult? Function(ModelDownloading value)? downloading,
-    TResult? Function(ModelDownloadDone value)? done,
-    TResult? Function(ModelDownloadError value)? error,
-  }) {
-    return done?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(ModelDownloadIdle value)? idle,
-    TResult Function(ModelDownloadChecking value)? checking,
-    TResult Function(ModelDownloadAlreadyExists value)? alreadyExists,
-    TResult Function(ModelDownloading value)? downloading,
-    TResult Function(ModelDownloadDone value)? done,
-    TResult Function(ModelDownloadError value)? error,
-    required TResult orElse(),
-  }) {
-    if (done != null) {
-      return done(this);
-    }
-    return orElse();
-  }
-}
-
-abstract class ModelDownloadDone implements ModelDownloadState {
-  const factory ModelDownloadDone() = _$ModelDownloadDoneImpl;
-}
-
-/// @nodoc
-abstract class _$$ModelDownloadErrorImplCopyWith<$Res> {
-  factory _$$ModelDownloadErrorImplCopyWith(_$ModelDownloadErrorImpl value,
-          $Res Function(_$ModelDownloadErrorImpl) then) =
-      __$$ModelDownloadErrorImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String message});
-}
-
-/// @nodoc
-class __$$ModelDownloadErrorImplCopyWithImpl<$Res>
-    extends _$ModelDownloadStateCopyWithImpl<$Res, _$ModelDownloadErrorImpl>
-    implements _$$ModelDownloadErrorImplCopyWith<$Res> {
-  __$$ModelDownloadErrorImplCopyWithImpl(_$ModelDownloadErrorImpl _value,
-      $Res Function(_$ModelDownloadErrorImpl) _then)
-      : super(_value, _then);
-
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? message = null,
-  }) {
-    return _then(_$ModelDownloadErrorImpl(
-      message: null == message
-          ? _value.message
-          : message // ignore: cast_nullable_to_non_nullable
+    return _then(_$ModelDownloadMissingImpl(
+      modelPath: null == modelPath
+          ? _value.modelPath
+          : modelPath // ignore: cast_nullable_to_non_nullable
               as String,
     ));
   }
@@ -852,48 +464,46 @@ class __$$ModelDownloadErrorImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ModelDownloadErrorImpl implements ModelDownloadError {
-  const _$ModelDownloadErrorImpl({required this.message});
+class _$ModelDownloadMissingImpl implements ModelDownloadMissing {
+  const _$ModelDownloadMissingImpl({required this.modelPath});
 
   @override
-  final String message;
+  final String modelPath;
 
   @override
   String toString() {
-    return 'ModelDownloadState.error(message: $message)';
+    return 'ModelDownloadState.missing(modelPath: $modelPath)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ModelDownloadErrorImpl &&
-            (identical(other.message, message) || other.message == message));
+            other is _$ModelDownloadMissingImpl &&
+            (identical(other.modelPath, modelPath) ||
+                other.modelPath == modelPath));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, message);
+  int get hashCode => Object.hash(runtimeType, modelPath);
 
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ModelDownloadErrorImplCopyWith<_$ModelDownloadErrorImpl> get copyWith =>
-      __$$ModelDownloadErrorImplCopyWithImpl<_$ModelDownloadErrorImpl>(
-          this, _$identity);
+  _$$ModelDownloadMissingImplCopyWith<_$ModelDownloadMissingImpl>
+      get copyWith =>
+          __$$ModelDownloadMissingImplCopyWithImpl<_$ModelDownloadMissingImpl>(
+              this, _$identity);
 
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() idle,
     required TResult Function() checking,
-    required TResult Function() alreadyExists,
-    required TResult Function(
-            double progress, int receivedBytes, int totalBytes)
-        downloading,
-    required TResult Function() done,
-    required TResult Function(String message) error,
+    required TResult Function() exists,
+    required TResult Function(String modelPath) missing,
   }) {
-    return error(message);
+    return missing(modelPath);
   }
 
   @override
@@ -901,13 +511,10 @@ class _$ModelDownloadErrorImpl implements ModelDownloadError {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? idle,
     TResult? Function()? checking,
-    TResult? Function()? alreadyExists,
-    TResult? Function(double progress, int receivedBytes, int totalBytes)?
-        downloading,
-    TResult? Function()? done,
-    TResult? Function(String message)? error,
+    TResult? Function()? exists,
+    TResult? Function(String modelPath)? missing,
   }) {
-    return error?.call(message);
+    return missing?.call(modelPath);
   }
 
   @override
@@ -915,15 +522,12 @@ class _$ModelDownloadErrorImpl implements ModelDownloadError {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? idle,
     TResult Function()? checking,
-    TResult Function()? alreadyExists,
-    TResult Function(double progress, int receivedBytes, int totalBytes)?
-        downloading,
-    TResult Function()? done,
-    TResult Function(String message)? error,
+    TResult Function()? exists,
+    TResult Function(String modelPath)? missing,
     required TResult orElse(),
   }) {
-    if (error != null) {
-      return error(message);
+    if (missing != null) {
+      return missing(modelPath);
     }
     return orElse();
   }
@@ -933,12 +537,10 @@ class _$ModelDownloadErrorImpl implements ModelDownloadError {
   TResult map<TResult extends Object?>({
     required TResult Function(ModelDownloadIdle value) idle,
     required TResult Function(ModelDownloadChecking value) checking,
-    required TResult Function(ModelDownloadAlreadyExists value) alreadyExists,
-    required TResult Function(ModelDownloading value) downloading,
-    required TResult Function(ModelDownloadDone value) done,
-    required TResult Function(ModelDownloadError value) error,
+    required TResult Function(ModelDownloadExists value) exists,
+    required TResult Function(ModelDownloadMissing value) missing,
   }) {
-    return error(this);
+    return missing(this);
   }
 
   @override
@@ -946,12 +548,10 @@ class _$ModelDownloadErrorImpl implements ModelDownloadError {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(ModelDownloadIdle value)? idle,
     TResult? Function(ModelDownloadChecking value)? checking,
-    TResult? Function(ModelDownloadAlreadyExists value)? alreadyExists,
-    TResult? Function(ModelDownloading value)? downloading,
-    TResult? Function(ModelDownloadDone value)? done,
-    TResult? Function(ModelDownloadError value)? error,
+    TResult? Function(ModelDownloadExists value)? exists,
+    TResult? Function(ModelDownloadMissing value)? missing,
   }) {
-    return error?.call(this);
+    return missing?.call(this);
   }
 
   @override
@@ -959,25 +559,23 @@ class _$ModelDownloadErrorImpl implements ModelDownloadError {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(ModelDownloadIdle value)? idle,
     TResult Function(ModelDownloadChecking value)? checking,
-    TResult Function(ModelDownloadAlreadyExists value)? alreadyExists,
-    TResult Function(ModelDownloading value)? downloading,
-    TResult Function(ModelDownloadDone value)? done,
-    TResult Function(ModelDownloadError value)? error,
+    TResult Function(ModelDownloadExists value)? exists,
+    TResult Function(ModelDownloadMissing value)? missing,
     required TResult orElse(),
   }) {
-    if (error != null) {
-      return error(this);
+    if (missing != null) {
+      return missing(this);
     }
     return orElse();
   }
 }
 
-abstract class ModelDownloadError implements ModelDownloadState {
-  const factory ModelDownloadError({required final String message}) =
-      _$ModelDownloadErrorImpl;
+abstract class ModelDownloadMissing implements ModelDownloadState {
+  const factory ModelDownloadMissing({required final String modelPath}) =
+      _$ModelDownloadMissingImpl;
 
-  String get message;
+  String get modelPath;
   @JsonKey(ignore: true)
-  _$$ModelDownloadErrorImplCopyWith<_$ModelDownloadErrorImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+  _$$ModelDownloadMissingImplCopyWith<_$ModelDownloadMissingImpl>
+      get copyWith => throw _privateConstructorUsedError;
 }

@@ -1,9 +1,9 @@
-// ── 모델 다운로드 설정 ────────────────────────────────────────────────────────
+// ── 모델 파일 설정 ────────────────────────────────────────────────────────────
 /// Gemma 2B IT INT4 — MediaPipe CPU 추론용 모델
-/// 출처: https://ai.google.dev/edge/mediapipe/solutions/genai/llm_inference/android
-/// 파일 크기: 약 1.5 GB
-const String kModelDownloadUrl =
-    'https://storage.googleapis.com/mediapipe-models/llm_inference/gemma-2b-it-cpu-int4/float32/1/gemma-2b-it-cpu-int4.bin';
+/// 파일 크기: 약 1.35 GB
+/// 수동 다운로드: HuggingFace 로그인 + Gemma 라이선스 동의 후 다운로드
+/// https://huggingface.co/google/gemma-2b-it-tflite
+const String kModelHuggingFacePage = 'https://huggingface.co/google/gemma-2b-it-tflite';
 const String kModelFileName = 'gemma-2b-it-cpu-int4.bin';
 const String kModelSubDir = 'models';
 

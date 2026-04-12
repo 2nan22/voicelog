@@ -7,9 +7,14 @@ part of 'model_download_notifier.dart';
 // **************************************************************************
 
 String _$modelDownloadNotifierHash() =>
-    r'57716d1e927e5a4257dbb550cd6cf91318d779e4';
+    r'9abd942bdf6dc83c7fc4a39480dd388afd84c60f';
 
-/// See also [ModelDownloadNotifier].
+/// 모델 파일 존재 여부를 확인하는 Notifier.
+///
+/// 파일이 없으면 [ModelDownloadState.missing]을 emit하여
+/// SplashScreen에서 수동 설치 안내를 표시한다.
+///
+/// Copied from [ModelDownloadNotifier].
 @ProviderFor(ModelDownloadNotifier)
 final modelDownloadNotifierProvider = AutoDisposeNotifierProvider<
     ModelDownloadNotifier, ModelDownloadState>.internal(
