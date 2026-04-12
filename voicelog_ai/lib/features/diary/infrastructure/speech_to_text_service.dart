@@ -9,6 +9,10 @@ class SpeechToTextService {
   final SpeechToText _stt = SpeechToText();
   bool _isInitialized = false;
 
+  /// startListening() 호출 시 등록되는 오류 콜백.
+  /// permanent=true 이면 해당 listen 세션이 완전히 종료된 것이다.
+  void Function(String errorMsg, bool permanent)? _listeningErrorCallback;
+
   bool get isInitialized => _isInitialized;
 
   /// STT 엔진 초기화 및 권한 요청.
@@ -30,10 +34,13 @@ class SpeechToTextService {
   /// 음성 인식 시작.
   /// [onResult]: 인식 결과 콜백 (중간 결과 포함)
   /// [onAmplitude]: 마이크 음량 레벨 콜백 (0.0 ~ 1.0 정규화)
+  /// [onError]: STT 오류 콜백. permanent=true 이면 세션이 완전히 종료된 것이다.
   Future<void> startListening({
     required void Function(String text, bool isFinal) onResult,
     void Function(double amplitude)? onAmplitude,
+    void Function(String errorMsg, bool permanent)? onError,
   }) async {
+    _listeningErrorCallback = onError;
     if (!_isInitialized) {
       AppLogger.warn('STT가 초기화되지 않았습니다.');
       return;
@@ -56,18 +63,22 @@ class SpeechToTextService {
   }
 
   Future<void> stopListening() async {
+    _listeningErrorCallback = null;
     await _stt.stop();
   }
 
   Future<void> cancelListening() async {
+    _listeningErrorCallback = null;
     await _stt.cancel();
   }
 
   void _onError(SpeechRecognitionError error) {
     AppLogger.error('STT 오류: ${error.errorMsg} (permanent: ${error.permanent})');
+    _listeningErrorCallback?.call(error.errorMsg, error.permanent);
   }
 
   void dispose() {
+    _listeningErrorCallback = null;
     _stt.cancel();
   }
 }

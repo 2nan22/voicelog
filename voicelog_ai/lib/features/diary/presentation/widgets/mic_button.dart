@@ -83,6 +83,18 @@ class _MicButtonState extends ConsumerState<MicButton>
             }
           },
           onAmplitude: amplitudesNotifier.add,
+          onError: (errorMsg, permanent) {
+            if (!permanent) return;
+            // permanent 오류 = STT 세션 완전 종료
+            // 인식된 텍스트가 있으면 LLM 처리로, 없으면 에러 상태로 전환
+            final currentText = ref.read(sttTextNotifierProvider);
+            if (currentText.isNotEmpty) {
+              notifier.startProcessing();
+            } else {
+              notifier.setError();
+            }
+            _stopPulse();
+          },
         );
       } else if (state == RecordingState.recording) {
         await sttService.stopListening();

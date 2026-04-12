@@ -311,7 +311,7 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Spacer(flex: 1),
+                      const Flexible(child: SizedBox()),
                       // 상태 배지
                       _RecordingStateBadge(state: recordingState),
                       const SizedBox(height: 16),
@@ -342,7 +342,7 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
                       // AI 처리 중 배지 (processing 상태에만)
                       if (recordingState == RecordingState.processing)
                         const _AiStatusBadge(),
-                      const Spacer(flex: 2),
+                      const Flexible(flex: 2, child: SizedBox()),
                       // 파형 (recording 상태에만)
                       if (recordingState == RecordingState.recording) ...[
                         WaveformWidget(
@@ -615,17 +615,18 @@ class _GlassSttContainer extends ConsumerWidget {
 
   Widget _buildSttContent(BuildContext context) {
     if (sttText.isEmpty) {
+      final isRecording = recordingState == RecordingState.recording;
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.mic_none_rounded,
+            isRecording ? Icons.graphic_eq_rounded : Icons.mic_none_rounded,
             size: 40,
             color: AppColors.onSurfaceVariant.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 12),
           Text(
-            AppStrings.recordStart,
+            isRecording ? '말씀해 주세요...' : AppStrings.recordStart,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
             ),

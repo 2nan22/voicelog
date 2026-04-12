@@ -12,9 +12,12 @@ class SettingsNotifier extends _$SettingsNotifier {
   Future<AppSettings> build() async {
     final isar = await ref.watch(isarProvider.future);
     final doc = await isar.appSettingsDocuments.get(0);
+    final styleIdx = doc?.writingStyleIndex ?? 0;
     return AppSettings(
       isDarkMode: doc?.isDarkMode ?? false,
-      writingStyle: WritingStyle.values[doc?.writingStyleIndex ?? 0],
+      writingStyle: styleIdx >= 0 && styleIdx < WritingStyle.values.length
+          ? WritingStyle.values[styleIdx]
+          : WritingStyle.diary,
     );
   }
 
