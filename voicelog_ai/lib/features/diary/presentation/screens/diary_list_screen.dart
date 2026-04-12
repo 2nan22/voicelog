@@ -62,6 +62,14 @@ class _DiaryListBodyState extends ConsumerState<DiaryListBody> {
                 ),
               ),
             ),
+            // 퀵 인사이트 벤토 그리드
+            SliverToBoxAdapter(
+              child: diaryByDateAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (diaryByDate) => _QuickInsightBento(diaryByDate: diaryByDate),
+              ),
+            ),
             // 선택한 날의 일기 목록
             SliverToBoxAdapter(
               child: AnimatedSwitcher(
@@ -184,7 +192,7 @@ class _DiaryListBodyState extends ConsumerState<DiaryListBody> {
         child: Text(
           '오류가 발생했어요: $e',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: const Color(0xFF414754),
+            color: AppColors.onSurfaceVariant,
           ),
         ),
       ),
@@ -202,7 +210,7 @@ class _DiaryListBodyState extends ConsumerState<DiaryListBody> {
               child: Text(
                 '이 날의 일기가 없어요',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: const Color(0xFF414754).withValues(alpha: 0.6),
+                  color: AppColors.onSurfaceVariant.withValues(alpha: 0.6),
                 ),
               ),
             ),
@@ -230,6 +238,177 @@ class _DiaryListBodyState extends ConsumerState<DiaryListBody> {
   }
 }
 
+// ─── 퀵 인사이트 벤토 ────────────────────────────────────────────────────────
+
+class _QuickInsightBento extends StatelessWidget {
+  const _QuickInsightBento({required this.diaryByDate});
+
+  final Map<DateTime, List<DiaryEntry>> diaryByDate;
+
+  /// 오늘부터 역방향으로 연속 기록 일수를 계산
+  int get _streakDays {
+    int streak = 0;
+    DateTime day = DateTime.now();
+    while (true) {
+      final key = DateTime(day.year, day.month, day.day);
+      if (diaryByDate.containsKey(key)) {
+        streak++;
+        day = day.subtract(const Duration(days: 1));
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  /// 최근 7일 중 가장 많이 기록된 감정 반환
+  String get _weeklyEmotion {
+    final now = DateTime.now();
+    final counts = <String, int>{};
+    for (int i = 0; i < 7; i++) {
+      final day = now.subtract(Duration(days: i));
+      final key = DateTime(day.year, day.month, day.day);
+      final entries = diaryByDate[key] ?? [];
+      for (final e in entries) {
+        counts[e.emotion] = (counts[e.emotion] ?? 0) + 1;
+      }
+    }
+    if (counts.isEmpty) return '—';
+    return counts.entries
+        .reduce((a, b) => a.value >= b.value ? a : b)
+        .key;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final streak = _streakDays;
+    final emotion = _weeklyEmotion;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          // 연속 기록 카드
+          Expanded(
+            child: _InsightCard(
+              backgroundColor: scheme.primary,
+              icon: Icons.bolt_rounded,
+              iconColor: Colors.white,
+              label: '연속 기록',
+              value: streak > 0 ? '$streak일째' : '기록 없음',
+              description: streak > 0 ? '지금의 흐름을 놓치지 마세요!' : '오늘 첫 기록을 남겨보세요',
+              textColor: Colors.white,
+              labelColor: Colors.white.withValues(alpha: 0.8),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // 이번 주 기분 카드
+          Expanded(
+            child: _InsightCard(
+              backgroundColor: Colors.white,
+              icon: Icons.psychology_rounded,
+              iconColor: scheme.primary,
+              label: '이번 주 기분',
+              value: emotion,
+              description: null,
+              textColor: AppColors.onSurface,
+              labelColor: AppColors.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InsightCard extends StatelessWidget {
+  const _InsightCard({
+    required this.backgroundColor,
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+    required this.description,
+    required this.textColor,
+    required this.labelColor,
+  });
+
+  final Color backgroundColor;
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+  final String? description;
+  final Color textColor;
+  final Color labelColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 아이콘 + 라벨 행
+          Row(
+            children: [
+              Icon(icon, size: 18, color: iconColor),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: labelColor,
+                    letterSpacing: 0.5,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // 값
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: textColor,
+              height: 1.1,
+            ),
+          ),
+          // 설명 (옵션)
+          if (description != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              description!,
+              style: TextStyle(
+                fontSize: 12,
+                color: textColor.withValues(alpha: 0.75),
+                height: 1.4,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 // ─── 고정 글래스 상단 네비게이션 ──────────────────────────────────────────────
 // SliverPersistentHeaderDelegate 대신 일반 위젯으로 구현.
 // SliverPersistentHeader(pinned) + BackdropFilter는 ShellRoute 탭 전환 후
@@ -242,30 +421,41 @@ class _GlassNavWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           height: topPadding + 64,
-          color: const Color(0xFFF8F9FB).withValues(alpha: 0.75),
-          padding: EdgeInsets.only(top: topPadding, left: 24, right: 8),
+          color: Colors.white.withValues(alpha: 0.8),
+          padding: EdgeInsets.only(top: topPadding, left: 24, right: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              // 앱명 — Primary 색상 좌측 정렬
+              Text(
                 AppStrings.appName,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
-                  color: Color(0xFF191C1E),
+                  color: scheme.primary,
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.account_circle_outlined, size: 26),
-                color: const Color(0xFF0059B9),
-                tooltip: '프로필',
-                onPressed: () {},
+              // 프로필 아바타 (32px 원형)
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.surfaceContainer,
+                ),
+                child: Icon(
+                  Icons.person_rounded,
+                  size: 18,
+                  color: AppColors.onSurfaceVariant,
+                ),
               ),
             ],
           ),

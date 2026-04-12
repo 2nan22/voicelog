@@ -7,9 +7,9 @@ import 'package:voicelog_ai/core/extensions/datetime_ext.dart';
 import 'package:voicelog_ai/core/theme/app_colors.dart';
 import 'package:voicelog_ai/features/diary/domain/diary_entry.dart';
 
-/// 일기 목록에서 각 항목을 표시하는 카드 위젯.
+/// 일기 목록 카드 — Stitch v0.0.2 Seoul Minimalist 스타일.
 ///
-/// Stitch 디자인 기준: 왼쪽 full-height 감정 컬러 바 + 날짜·감정 배지 + 텍스트 + 태그
+/// 감정 원형 아이콘 뱃지 + 제목(첫 문장) + 날짜 서브텍스트 + 본문 2줄 preview + 태그 칩.
 class DiaryCard extends ConsumerWidget {
   const DiaryCard({super.key, required this.entry});
 
@@ -23,8 +23,27 @@ class DiaryCard extends ConsumerWidget {
     _     => AppColors.emotionCalm,
   };
 
+  IconData get _emotionIcon => switch (entry.emotion) {
+    '기쁨' => Icons.sentiment_satisfied_rounded,
+    '슬픔' => Icons.sentiment_dissatisfied_rounded,
+    '화남' => Icons.mood_bad_rounded,
+    _     => Icons.self_improvement_rounded,
+  };
+
+  /// 보정 텍스트에서 첫 문장을 제목으로 추출 (최대 30자)
+  String get _title {
+    final text = entry.correctedText.isNotEmpty
+        ? entry.correctedText
+        : entry.rawText;
+    final dotIdx = text.indexOf('.');
+    final raw = dotIdx > 0 ? text.substring(0, dotIdx) : text;
+    return raw.length > 30 ? '${raw.substring(0, 30)}…' : raw;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 4, 24, 8),
       child: GestureDetector(
@@ -32,137 +51,107 @@ class DiaryCard extends ConsumerWidget {
           AppRoutes.diaryDetail.replaceFirst(':id', '${entry.id}'),
         ),
         child: Container(
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: Color(0x0F191C1E),
-                blurRadius: 24,
-                offset: Offset(0, 12),
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Stack(
-              children: [
-                // 감정 컬러 바 — 왼쪽 full-height (Stitch: w-1.5 = 6px)
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 6,
-                  child: ColoredBox(color: _emotionColor),
-                ),
-                // 카드 콘텐츠 (왼쪽 컬러 바 너비만큼 패딩)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 날짜·시간 + 감정 배지 행
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '${entry.createdAt.toRelativeDate()} · ${entry.createdAt.toKoreanTime()}',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: const Color(0xFF414754).withValues(alpha: 0.6),
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.4,
-                              ),
-                            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 감정 아이콘 뱃지 + 제목 + 날짜 행
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 감정 원형 뱃지
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _emotionColor.withValues(alpha: 0.1),
+                    ),
+                    child: Icon(
+                      _emotionIcon,
+                      size: 20,
+                      color: _emotionColor,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // 제목 + 날짜
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _title,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.onSurface,
                           ),
-                          const SizedBox(width: 8),
-                          _EmotionBadge(
-                            emotion: entry.emotion,
-                            color: _emotionColor,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      // 보정 텍스트 (2줄 미리보기)
-                      Text(
-                        entry.correctedText,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF191C1E),
-                          height: 1.55,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      // 태그 (최대 3개)
-                      if (entry.tags.isNotEmpty) ...[
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
-                          children: entry.tags.take(3).map((tag) {
-                            return _TagChip(tag: tag, context: context);
-                          }).toList(),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${entry.createdAt.toRelativeDate()} · ${entry.createdAt.toKoreanTime()}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
-                    ],
+                    ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // 본문 2줄 preview
+              Text(
+                entry.correctedText.isNotEmpty
+                    ? entry.correctedText
+                    : entry.rawText,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                  height: 1.6,
+                ),
+              ),
+              // 태그 칩
+              if (entry.tags.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: entry.tags.take(3).map((tag) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        tag,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.primary,
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ],
-            ),
+            ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EmotionBadge extends StatelessWidget {
-  const _EmotionBadge({required this.emotion, required this.color});
-
-  final String emotion;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        emotion,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: color,
-          letterSpacing: 0.3,
-        ),
-      ),
-    );
-  }
-}
-
-class _TagChip extends StatelessWidget {
-  const _TagChip({required this.tag, required this.context});
-
-  final String tag;
-  final BuildContext context;
-
-  @override
-  Widget build(BuildContext _) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF2F4F6),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        tag,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: Theme.of(context).colorScheme.primary,
         ),
       ),
     );
