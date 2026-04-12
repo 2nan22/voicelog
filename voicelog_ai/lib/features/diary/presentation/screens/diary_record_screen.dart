@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:audioplayers/audioplayers.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -39,10 +43,29 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
   Timer? _inferenceTimer;
   int _elapsedSeconds = 0;
 
+  // ── 오디오 녹음 · 재생 ──────────────────────────────────────────────────────
+  final _audioRecorder = AudioRecorder();
+  final _audioPlayer = AudioPlayer();
+  String? _recordedFilePath;
+  bool _isPlaying = false;
+  late final StreamSubscription<PlayerState> _playerStateSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // 재생 상태 변화를 감지하여 아이콘을 업데이트한다
+    _playerStateSub = _audioPlayer.onPlayerStateChanged.listen((playerState) {
+      if (mounted) setState(() => _isPlaying = playerState == PlayerState.playing);
+    });
+  }
+
   @override
   void dispose() {
     _recordingTimer?.cancel();
     _inferenceTimer?.cancel();
+    _playerStateSub.cancel();
+    unawaited(_audioRecorder.dispose());
+    unawaited(_audioPlayer.dispose());
     super.dispose();
   }
 
@@ -63,6 +86,51 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     final s = _elapsedSeconds % 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
+
+  // ── 오디오 녹음 ─────────────────────────────────────────────────────────────
+
+  Future<void> _startAudioRecording() async {
+    try {
+      final dir = await getTemporaryDirectory();
+      _recordedFilePath =
+          '${dir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      await _audioRecorder.start(
+        const RecordConfig(encoder: AudioEncoder.aacLc),
+        path: _recordedFilePath!,
+      );
+    } catch (e) {
+      AppLogger.error('오디오 녹음 시작 실패', e);
+    }
+  }
+
+  Future<void> _stopAudioRecording() async {
+    try {
+      await _audioRecorder.stop();
+    } catch (e) {
+      AppLogger.error('오디오 녹음 중지 실패', e);
+    }
+  }
+
+  // ── 오디오 재생 ─────────────────────────────────────────────────────────────
+
+  void _togglePlayback() {
+    unawaited(_doTogglePlayback());
+  }
+
+  Future<void> _doTogglePlayback() async {
+    if (_recordedFilePath == null) return;
+    try {
+      if (_audioPlayer.state == PlayerState.playing) {
+        await _audioPlayer.pause();
+      } else {
+        await _audioPlayer.play(DeviceFileSource(_recordedFilePath!));
+      }
+    } catch (e) {
+      AppLogger.error('오디오 재생 실패', e);
+    }
+  }
+
+  // ── LLM 추론 타임아웃 ────────────────────────────────────────────────────────
 
   /// LLM 추론이 [kInferenceTimeoutSeconds] 초과 시 경고 다이얼로그를 표시한다.
   void _startInferenceTimer() {
@@ -147,6 +215,9 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     ref.read(diaryRecordNotifierProvider.notifier).reset();
     ref.read(sttTextNotifierProvider.notifier).clear();
     ref.read(diaryProcessNotifierProvider.notifier).reset();
+    ref.read(amplitudesNotifierProvider.notifier).clear();
+    _recordedFilePath = null;
+    unawaited(_audioPlayer.stop());
     _stopTimer();
     setState(() => _elapsedSeconds = 0);
   }
@@ -206,15 +277,18 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
   Widget build(BuildContext context) {
     final recordingState = ref.watch(diaryRecordNotifierProvider);
     final sttText = ref.watch(sttTextNotifierProvider);
+    final amplitudes = ref.watch(amplitudesNotifierProvider);
     final topPadding = MediaQuery.of(context).padding.top;
 
-    // RecordingState 변화를 감지하여 타이머 및 LLM 흐름을 자동 관리한다
+    // RecordingState 변화를 감지하여 타이머·오디오·LLM 흐름을 자동 관리한다
     ref.listen<RecordingState>(diaryRecordNotifierProvider, (prev, next) {
       if (prev != RecordingState.recording && next == RecordingState.recording) {
         _startTimer();
+        unawaited(_startAudioRecording()); // STT와 병행 오디오 파일 녹음 시작
       } else if (prev == RecordingState.recording &&
           next != RecordingState.recording) {
         _stopTimer();
+        unawaited(_stopAudioRecording()); // 오디오 파일 저장 완료
       }
       // processing 진입 시 LLM 스트리밍 시작
       if (prev != RecordingState.processing &&
@@ -263,9 +337,12 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
             child: _BottomPanel(
               recordingState: recordingState,
               timerDisplay: _timerDisplay,
+              amplitudes: amplitudes,
+              isPlaying: _isPlaying,
               onDelete: _onDelete,
               onFinishRecording: _onFinishRecording,
               onSave: _onSave,
+              onPlayback: _togglePlayback,
             ),
           ),
         ],
@@ -670,16 +747,22 @@ class _BottomPanel extends StatelessWidget {
   const _BottomPanel({
     required this.recordingState,
     required this.timerDisplay,
+    required this.amplitudes,
+    required this.isPlaying,
     required this.onDelete,
     required this.onFinishRecording,
     required this.onSave,
+    required this.onPlayback,
   });
 
   final RecordingState recordingState;
   final String timerDisplay;
+  final List<double> amplitudes;
+  final bool isPlaying;
   final VoidCallback onDelete;
   final VoidCallback onFinishRecording;
   final Future<void> Function() onSave;
+  final VoidCallback onPlayback;
 
   @override
   Widget build(BuildContext context) {
@@ -713,6 +796,7 @@ class _BottomPanel extends StatelessWidget {
             children: [
               WaveformWidget(
                 isRecording: recordingState == RecordingState.recording,
+                amplitudes: amplitudes,
               ),
               const SizedBox(height: AppDimensions.paddingLarge),
               Center(
@@ -720,9 +804,11 @@ class _BottomPanel extends StatelessWidget {
                   constraints: const BoxConstraints(maxWidth: 280),
                   child: _ControlsRow(
                     recordingState: recordingState,
+                    isPlaying: isPlaying,
                     onDelete: onDelete,
                     onFinishRecording: onFinishRecording,
                     onSave: onSave,
+                    onPlayback: onPlayback,
                   ),
                 ),
               ),
@@ -757,15 +843,19 @@ class _BottomPanel extends StatelessWidget {
 class _ControlsRow extends StatelessWidget {
   const _ControlsRow({
     required this.recordingState,
+    required this.isPlaying,
     required this.onDelete,
     required this.onFinishRecording,
     required this.onSave,
+    required this.onPlayback,
   });
 
   final RecordingState recordingState;
+  final bool isPlaying;
   final VoidCallback onDelete;
   final VoidCallback onFinishRecording;
   final Future<void> Function() onSave;
+  final VoidCallback onPlayback;
 
   @override
   Widget build(BuildContext context) {
@@ -798,10 +888,11 @@ class _ControlsRow extends StatelessWidget {
   };
 
   Widget _buildCenterButton() => switch (recordingState) {
-    RecordingState.done => const _SideButton(
-        icon: Icons.play_arrow_rounded,
+    RecordingState.done => _SideButton(
+        icon: isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
         tooltip: AppStrings.btnPlayRecording,
-        isFilled: true, // 꼭지 3에서 onTap 구현
+        onTap: onPlayback,
+        isFilled: true,
       ),
     _ => const MicButton(),
   };

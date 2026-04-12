@@ -6,6 +6,19 @@ import 'package:voicelog_ai/features/diary/domain/diary_entry.dart';
 
 part 'diary_list_provider.g.dart';
 
+/// 날짜(연·월·일만) → 해당 날의 DiaryEntry 목록 맵.
+/// 캘린더 이벤트 마커 및 선택 날짜 목록에 사용.
+@riverpod
+Future<Map<DateTime, List<DiaryEntry>>> diaryByDate(DiaryByDateRef ref) async {
+  final entries = await ref.watch(diaryListNotifierProvider.future);
+  final map = <DateTime, List<DiaryEntry>>{};
+  for (final e in entries) {
+    final day = DateTime(e.createdAt.year, e.createdAt.month, e.createdAt.day);
+    map.putIfAbsent(day, () => []).add(e);
+  }
+  return map;
+}
+
 @riverpod
 class DiaryListNotifier extends _$DiaryListNotifier {
   @override

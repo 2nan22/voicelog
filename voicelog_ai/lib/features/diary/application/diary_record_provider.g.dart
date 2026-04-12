@@ -61,5 +61,27 @@ final sttTextNotifierProvider =
 );
 
 typedef _$SttTextNotifier = AutoDisposeNotifier<String>;
+String _$amplitudesNotifierHash() =>
+    r'c50b9a516c03a273392e252ed07d79bf0697462f';
+
+/// 마이크 실시간 진폭 버퍼 (WaveformWidget 연동).
+///
+/// [add]로 최신 진폭값(0.0 ~ 1.0)을 추가하며 최대 40개를 유지한다.
+/// 오래된 값은 자동으로 제거되어 슬라이딩 윈도우로 동작한다.
+///
+/// Copied from [AmplitudesNotifier].
+@ProviderFor(AmplitudesNotifier)
+final amplitudesNotifierProvider =
+    AutoDisposeNotifierProvider<AmplitudesNotifier, List<double>>.internal(
+  AmplitudesNotifier.new,
+  name: r'amplitudesNotifierProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$amplitudesNotifierHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$AmplitudesNotifier = AutoDisposeNotifier<List<double>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

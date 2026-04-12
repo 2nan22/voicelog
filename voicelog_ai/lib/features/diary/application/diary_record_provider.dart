@@ -35,3 +35,23 @@ class SttTextNotifier extends _$SttTextNotifier {
   void update(String text) => state = text;
   void clear() => state = '';
 }
+
+/// 마이크 실시간 진폭 버퍼 (WaveformWidget 연동).
+///
+/// [add]로 최신 진폭값(0.0 ~ 1.0)을 추가하며 최대 40개를 유지한다.
+/// 오래된 값은 자동으로 제거되어 슬라이딩 윈도우로 동작한다.
+@riverpod
+class AmplitudesNotifier extends _$AmplitudesNotifier {
+  static const _maxCount = 40;
+
+  @override
+  List<double> build() => const [];
+
+  void add(double value) {
+    final updated = [...state, value];
+    if (updated.length > _maxCount) updated.removeAt(0);
+    state = updated;
+  }
+
+  void clear() => state = const [];
+}

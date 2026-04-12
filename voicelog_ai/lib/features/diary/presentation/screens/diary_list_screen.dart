@@ -3,17 +3,17 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:table_calendar/table_calendar.dart';
 
-import 'package:voicelog_ai/core/constants/dimensions.dart';
 import 'package:voicelog_ai/core/constants/routes.dart';
 import 'package:voicelog_ai/core/constants/strings.dart';
-import 'package:voicelog_ai/core/extensions/datetime_ext.dart';
+import 'package:voicelog_ai/core/theme/app_colors.dart';
 import 'package:voicelog_ai/core/widgets/loading_shimmer.dart';
 import 'package:voicelog_ai/features/diary/application/diary_list_provider.dart';
 import 'package:voicelog_ai/features/diary/domain/diary_entry.dart';
 import 'package:voicelog_ai/features/diary/presentation/widgets/diary_card.dart';
 
-/// 날짜별 그룹핑된 일기 목록 화면 (Shell body).
+/// 월간 캘린더 기반 홈 화면 (Shell body).
 ///
 /// Scaffold는 MainShell이 소유. 이 위젯은 body만 반환한다.
 ///
@@ -21,78 +21,56 @@ import 'package:voicelog_ai/features/diary/presentation/widgets/diary_card.dart'
 /// ShellRoute 탭 전환 후 semantics.parentDataDirty assertion을 유발하여
 /// 렌더링 트리가 dirty 상태로 남고 touch 이벤트가 완전히 차단된다.
 /// 따라서 고정 헤더는 Stack + Positioned 패턴으로 구현한다.
-class DiaryListBody extends ConsumerWidget {
+class DiaryListBody extends ConsumerStatefulWidget {
   const DiaryListBody({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final diariesAsync = ref.watch(diaryListNotifierProvider);
+  ConsumerState<DiaryListBody> createState() => _DiaryListBodyState();
+}
+
+class _DiaryListBodyState extends ConsumerState<DiaryListBody> {
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+
+  Color _emotionColor(String emotion) => switch (emotion) {
+    '기쁨' => AppColors.emotionJoy,
+    '슬픔' => AppColors.emotionSadness,
+    '화남' => AppColors.emotionAnger,
+    _     => AppColors.emotionCalm,
+  };
+
+  @override
+  Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
+    final diaryByDateAsync = ref.watch(diaryByDateProvider);
+    final scheme = Theme.of(context).colorScheme;
 
     return Stack(
       children: [
         CustomScrollView(
           slivers: [
-            // 고정 헤더 높이만큼 상단 여백 (헤더는 Stack Positioned으로 처리)
+            // 고정 헤더 높이만큼 상단 여백
             SliverToBoxAdapter(child: SizedBox(height: topPadding + 64)),
-            // 히어로 섹션
+            // 월간 캘린더
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 8),
-                child: _HeroSection(),
-              ),
-            ),
-            // 통계 벤토 카드
-            diariesAsync.when(
-              loading: () => const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(24, 16, 24, 8),
-                  child: _StatsBentoLoading(),
-                ),
-              ),
-              error: (_, __) => const SliverToBoxAdapter(child: SizedBox(height: 8)),
-              data: (entries) => SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-                  child: _StatsBento(entries: entries),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: diaryByDateAsync.when(
+                  loading: () => _buildCalendar(context, scheme, const {}),
+                  error: (_, __) => _buildCalendar(context, scheme, const {}),
+                  data: (diaryByDate) => _buildCalendar(context, scheme, diaryByDate),
                 ),
               ),
             ),
-            // 날짜 그룹 일기 목록
-            diariesAsync.when(
-              loading: () => SliverList.builder(
-                itemCount: 3,
-                itemBuilder: (_, __) => const Padding(
-                  padding: EdgeInsets.fromLTRB(24, 8, 24, 8),
-                  child: LoadingShimmer(height: 130, borderRadius: 20),
+            // 선택한 날의 일기 목록
+            SliverToBoxAdapter(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: KeyedSubtree(
+                  key: ValueKey(_selectedDay),
+                  child: _buildSelectedDayContent(context, diaryByDateAsync),
                 ),
               ),
-              error: (e, _) => SliverToBoxAdapter(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Text(
-                      '오류가 발생했어요: $e',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF414754),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              data: (entries) => entries.isEmpty
-                  ? SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(
-                        child: Text(
-                          AppStrings.noEntries,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: const Color(0xFF414754),
-                          ),
-                        ),
-                      ),
-                    )
-                  : _buildGroupedList(context, entries),
             ),
             // 하단 nav 높이만큼 여백
             const SliverToBoxAdapter(child: SizedBox(height: 120)),
@@ -105,39 +83,138 @@ class DiaryListBody extends ConsumerWidget {
           right: 0,
           child: _GlassNavWidget(topPadding: topPadding),
         ),
-        // FAB — Stack 하단 우측에 배치 (Scaffold 외부이므로 floatingActionButton 사용 불가)
+        // FAB — Stack 하단 우측에 배치
         Positioned(
           right: 20,
-          bottom: 100, // 하단 탭 높이(64) + 여백
-          child: _GradientFab(
-            onTap: () => context.push(AppRoutes.diaryRecord),
-          ),
+          bottom: 100,
+          child: _GradientFab(onTap: () => context.push(AppRoutes.diaryRecord)),
         ),
       ],
     );
   }
 
-  Widget _buildGroupedList(BuildContext context, List<DiaryEntry> entries) {
-    // 최신순 정렬 후 날짜별 그룹핑
-    final sorted = [...entries]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    final grouped = <String, List<DiaryEntry>>{};
-    for (final entry in sorted) {
-      grouped.putIfAbsent(entry.createdAt.toRelativeDate(), () => []).add(entry);
-    }
-    final keys = grouped.keys.toList();
+  Widget _buildCalendar(
+    BuildContext context,
+    ColorScheme scheme,
+    Map<DateTime, List<DiaryEntry>> diaryByDate,
+  ) {
+    return TableCalendar<DiaryEntry>(
+      locale: 'ko_KR',
+      firstDay: DateTime(2020),
+      lastDay: DateTime(2100),
+      focusedDay: _focusedDay,
+      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+      onDaySelected: (selectedDay, focusedDay) {
+        setState(() {
+          _selectedDay = selectedDay;
+          _focusedDay = focusedDay;
+        });
+      },
+      onPageChanged: (focusedDay) {
+        setState(() => _focusedDay = focusedDay);
+      },
+      calendarFormat: CalendarFormat.month,
+      availableCalendarFormats: const {CalendarFormat.month: '월'},
+      eventLoader: (day) {
+        final key = DateTime(day.year, day.month, day.day);
+        return diaryByDate[key] ?? [];
+      },
+      headerStyle: HeaderStyle(
+        formatButtonVisible: false,
+        titleCentered: true,
+        titleTextStyle: Theme.of(context).textTheme.titleMedium!.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      calendarStyle: CalendarStyle(
+        todayDecoration: BoxDecoration(
+          color: scheme.primary.withValues(alpha: 0.15),
+          shape: BoxShape.circle,
+        ),
+        todayTextStyle: TextStyle(
+          color: scheme.primary,
+          fontWeight: FontWeight.w700,
+        ),
+        selectedDecoration: BoxDecoration(
+          color: scheme.primary,
+          shape: BoxShape.circle,
+        ),
+        // markerBuilder로 직접 렌더링하므로 기본 마커 비활성화
+        markerDecoration: const BoxDecoration(),
+        markersMaxCount: 0,
+      ),
+      calendarBuilders: CalendarBuilders<DiaryEntry>(
+        markerBuilder: (context, date, events) {
+          if (events.isEmpty) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: events.take(3).map((entry) {
+                return Container(
+                  width: 6,
+                  height: 6,
+                  margin: const EdgeInsets.symmetric(horizontal: 1),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _emotionColor(entry.emotion),
+                  ),
+                );
+              }).toList(),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
-    return SliverList.builder(
-      itemCount: keys.length,
-      itemBuilder: (context, index) {
-        final dateKey = keys[index];
-        final dayEntries = grouped[dateKey]!;
+  Widget _buildSelectedDayContent(
+    BuildContext context,
+    AsyncValue<Map<DateTime, List<DiaryEntry>>> diaryByDateAsync,
+  ) {
+    if (_selectedDay == null) return const SizedBox.shrink();
+
+    return diaryByDateAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.fromLTRB(24, 16, 24, 8),
+        child: LoadingShimmer(height: 130, borderRadius: 20),
+      ),
+      error: (e, _) => Padding(
+        padding: const EdgeInsets.all(32),
+        child: Text(
+          '오류가 발생했어요: $e',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: const Color(0xFF414754),
+          ),
+        ),
+      ),
+      data: (diaryByDate) {
+        final key = DateTime(
+          _selectedDay!.year,
+          _selectedDay!.month,
+          _selectedDay!.day,
+        );
+        final entries = diaryByDate[key] ?? [];
+        if (entries.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 32),
+            child: Center(
+              child: Text(
+                '이 날의 일기가 없어요',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: const Color(0xFF414754).withValues(alpha: 0.6),
+                ),
+              ),
+            ),
+          );
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 4),
               child: Text(
-                dateKey,
+                '${_selectedDay!.year}년 ${_selectedDay!.month}월 ${_selectedDay!.day}일',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.w700,
@@ -145,39 +222,10 @@ class DiaryListBody extends ConsumerWidget {
                 ),
               ),
             ),
-            ...dayEntries.map((e) => DiaryCard(entry: e)),
+            ...entries.map((e) => DiaryCard(entry: e)),
           ],
         );
       },
-    );
-  }
-}
-
-// ─── 히어로 섹션 ──────────────────────────────────────────────────────────────
-
-class _HeroSection extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '나의 기록',
-          style: Theme.of(context).textTheme.displaySmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.8,
-            color: const Color(0xFF191C1E),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          '오늘 하루를 당신의 목소리로 담아보세요.',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: const Color(0xFF414754).withValues(alpha: 0.7),
-            height: 1.5,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -223,138 +271,6 @@ class _GlassNavWidget extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-// ─── 통계 벤토 ────────────────────────────────────────────────────────────────
-
-class _StatsBento extends StatelessWidget {
-  const _StatsBento({required this.entries});
-
-  final List<DiaryEntry> entries;
-
-  int get _thisMonthCount {
-    final now = DateTime.now();
-    return entries
-        .where((e) => e.createdAt.year == now.year && e.createdAt.month == now.month)
-        .length;
-  }
-
-  String get _topEmotion {
-    if (entries.isEmpty) return '—';
-    final counts = <String, int>{};
-    for (final e in entries) {
-      counts[e.emotion] = (counts[e.emotion] ?? 0) + 1;
-    }
-    return counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _BentoCard(
-            icon: Icons.calendar_today_rounded,
-            iconColor: Theme.of(context).colorScheme.primary,
-            cardColor: Colors.white,
-            label: '이번 달 기록',
-            value: '$_thisMonthCount 건',
-            valueColor: const Color(0xFF191C1E),
-            labelColor: const Color(0xFF414754),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _BentoCard(
-            icon: Icons.psychology_rounded,
-            iconColor: Colors.white,
-            cardColor: Theme.of(context).colorScheme.primary,
-            label: '가장 많이 느낀 감정',
-            value: _topEmotion,
-            valueColor: Colors.white,
-            labelColor: Colors.white.withValues(alpha: 0.75),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _BentoCard extends StatelessWidget {
-  const _BentoCard({
-    required this.icon,
-    required this.iconColor,
-    required this.cardColor,
-    required this.label,
-    required this.value,
-    required this.valueColor,
-    required this.labelColor,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final Color cardColor;
-  final String label;
-  final String value;
-  final Color valueColor;
-  final Color labelColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 140,
-      padding: const EdgeInsets.all(AppDimensions.paddingMedium + 4),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusLg),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F191C1E),
-            blurRadius: 24,
-            offset: Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: iconColor, size: 28),
-          const Spacer(),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: labelColor,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: valueColor,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatsBentoLoading extends StatelessWidget {
-  const _StatsBentoLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Row(
-      children: [
-        Expanded(child: LoadingShimmer(height: 140, borderRadius: AppDimensions.borderRadiusLg)),
-        SizedBox(width: 16),
-        Expanded(child: LoadingShimmer(height: 140, borderRadius: AppDimensions.borderRadiusLg)),
-      ],
     );
   }
 }

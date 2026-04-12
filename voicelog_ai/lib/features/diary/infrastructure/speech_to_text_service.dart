@@ -29,8 +29,10 @@ class SpeechToTextService {
 
   /// 음성 인식 시작.
   /// [onResult]: 인식 결과 콜백 (중간 결과 포함)
+  /// [onAmplitude]: 마이크 음량 레벨 콜백 (0.0 ~ 1.0 정규화)
   Future<void> startListening({
     required void Function(String text, bool isFinal) onResult,
+    void Function(double amplitude)? onAmplitude,
   }) async {
     if (!_isInitialized) {
       AppLogger.warn('STT가 초기화되지 않았습니다.');
@@ -41,6 +43,13 @@ class SpeechToTextService {
         result.recognizedWords,
         result.finalResult,
       ),
+      onSoundLevelChange: onAmplitude == null
+          ? null
+          : (double level) {
+              // level: -2.0 ~ 10.0 (dB 상대값) → 0.0 ~ 1.0 정규화
+              final normalized = ((level + 2.0) / 12.0).clamp(0.0, 1.0);
+              onAmplitude(normalized);
+            },
       localeId: 'ko_KR',
       pauseFor: const Duration(seconds: 3), // 3초 침묵 시 자동 중지
     );

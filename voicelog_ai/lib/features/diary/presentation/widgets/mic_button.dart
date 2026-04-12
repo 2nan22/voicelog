@@ -53,6 +53,7 @@ class _MicButtonState extends ConsumerState<MicButton>
         if (!granted) return;
         notifier.startRecording();
         unawaited(_pulseController.repeat(reverse: true));
+        final amplitudesNotifier = ref.read(amplitudesNotifierProvider.notifier);
         await sttService.startListening(
           onResult: (text, isFinal) {
             sttNotifier.update(text);
@@ -63,6 +64,7 @@ class _MicButtonState extends ConsumerState<MicButton>
                 ..reset();
             }
           },
+          onAmplitude: amplitudesNotifier.add,
         );
       } else if (state == RecordingState.recording) {
         await sttService.stopListening();
