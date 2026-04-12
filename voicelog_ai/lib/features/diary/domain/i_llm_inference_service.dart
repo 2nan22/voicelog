@@ -1,6 +1,6 @@
-/// MediaPipe LLM 추론 서비스 인터페이스.
+/// LLM 추론 서비스 인터페이스.
 ///
-/// 구현체는 [infrastructure/llm_inference_service.dart] 참조.
+/// 구현체: [MethodChannelLlmInferenceService] (Android MediaPipe Tasks GenAI SDK 브리지)
 /// 테스트에서는 이 인터페이스를 Mock으로 대체한다.
 abstract class ILlmInferenceService {
   /// 추론 엔진이 초기화되어 사용 가능한지 여부.

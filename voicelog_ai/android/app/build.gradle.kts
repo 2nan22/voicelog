@@ -20,11 +20,9 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.voicelog.voicelog_ai"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // MediaPipe tasks-genai 최소 요구사항: API 24 이상
+        minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -37,6 +35,12 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
+
+dependencies {
+    // MediaPipe Tasks GenAI — Native Assets 없이 표준 Android AAR로 동작
+    // Flutter mediapipe_genai 패키지 대체용
+    implementation("com.google.mediapipe:tasks-genai:0.10.22")
 }
 
 flutter {

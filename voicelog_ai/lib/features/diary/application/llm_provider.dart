@@ -8,11 +8,11 @@ part 'llm_provider.g.dart';
 
 /// LLM 서비스 싱글톤 Provider (앱 생명주기 동안 유지).
 ///
-/// [MediaPipeLlmInferenceService]를 [ILlmInferenceService]로 제공한다.
+/// [MethodChannelLlmInferenceService]를 [ILlmInferenceService]로 제공한다.
 /// [ref.onDispose]에서 자동으로 [ILlmInferenceService.dispose]를 호출한다.
 @Riverpod(keepAlive: true)
 ILlmInferenceService llmInferenceService(LlmInferenceServiceRef ref) {
-  final service = MediaPipeLlmInferenceService();
+  final service = MethodChannelLlmInferenceService();
   ref.onDispose(service.dispose);
   return service;
 }
