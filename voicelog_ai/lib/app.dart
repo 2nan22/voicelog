@@ -5,30 +5,21 @@ import 'package:go_router/go_router.dart';
 import 'package:voicelog_ai/core/constants/routes.dart';
 import 'package:voicelog_ai/core/constants/strings.dart';
 import 'package:voicelog_ai/core/theme/app_theme.dart';
+import 'package:voicelog_ai/features/diary/presentation/screens/diary_list_screen.dart';
 import 'package:voicelog_ai/features/diary/presentation/screens/diary_record_screen.dart';
 import 'package:voicelog_ai/features/diary/presentation/screens/splash_screen.dart';
 
-// 일기 목록 화면 임시 플레이스홀더 (Session 07 이후 구현 예정)
-class _DiaryListPlaceholder extends StatelessWidget {
-  const _DiaryListPlaceholder();
+// 상세 화면 플레이스홀더 (Session 09에서 구현 예정)
+class _DiaryDetailPlaceholder extends StatelessWidget {
+  const _DiaryDetailPlaceholder({required this.id});
+
+  final String id;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('일기 목록 (구현 예정)'),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => context.push(AppRoutes.diaryRecord),
-              icon: const Icon(Icons.mic),
-              label: const Text('녹음 화면 테스트'),
-            ),
-          ],
-        ),
-      ),
+      appBar: AppBar(title: const Text('일기 상세')),
+      body: Center(child: Text('일기 #$id (구현 예정)')),
     );
   }
 }
@@ -42,11 +33,17 @@ final _router = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.diaryList,
-      builder: (context, state) => const _DiaryListPlaceholder(),
+      builder: (context, state) => const DiaryListScreen(),
     ),
     GoRoute(
       path: AppRoutes.diaryRecord,
       builder: (context, state) => const DiaryRecordScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.diaryDetail,
+      builder: (context, state) => _DiaryDetailPlaceholder(
+        id: state.pathParameters['id'] ?? '',
+      ),
     ),
   ],
 );
