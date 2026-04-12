@@ -12,60 +12,54 @@ import 'package:voicelog_ai/features/diary/application/diary_list_provider.dart'
 import 'package:voicelog_ai/features/diary/domain/diary_entry.dart';
 
 /// 전체 기록을 월별로 그룹핑한 순수 타임라인 화면 (Shell body).
-class LogsScreen extends ConsumerStatefulWidget {
+class LogsScreen extends ConsumerWidget {
   const LogsScreen({super.key});
 
   @override
-  ConsumerState<LogsScreen> createState() => _LogsScreenState();
-}
-
-class _LogsScreenState extends ConsumerState<LogsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // BackdropFilter + SliverPersistentHeader(pinned) 첫 프레임 이슈 회피
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final topPadding = MediaQuery.of(context).padding.top;
     final diariesAsync = ref.watch(diaryListNotifierProvider);
 
-    return CustomScrollView(
-      slivers: [
-        // 글래스 상단 헤더
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: _LogsHeaderDelegate(topPadding: topPadding),
-        ),
-        // 월별 타임라인
-        diariesAsync.when(
-          loading: () => SliverList.builder(
-            itemCount: 4,
-            itemBuilder: (_, __) => const Padding(
-              padding: EdgeInsets.fromLTRB(24, 8, 24, 8),
-              child: LoadingShimmer(height: 80, borderRadius: 16),
-            ),
-          ),
-          error: (e, _) => SliverToBoxAdapter(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Text('오류: $e'),
+    return Stack(
+      children: [
+        CustomScrollView(
+          slivers: [
+            // 고정 헤더 높이만큼 상단 여백
+            SliverToBoxAdapter(child: SizedBox(height: topPadding + 64)),
+            // 월별 타임라인
+            diariesAsync.when(
+              loading: () => SliverList.builder(
+                itemCount: 4,
+                itemBuilder: (_, __) => const Padding(
+                  padding: EdgeInsets.fromLTRB(24, 8, 24, 8),
+                  child: LoadingShimmer(height: 80, borderRadius: 16),
+                ),
               ),
+              error: (e, _) => SliverToBoxAdapter(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Text('오류: $e'),
+                  ),
+                ),
+              ),
+              data: (entries) => entries.isEmpty
+                  ? const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: Text('아직 기록이 없어요.')),
+                    )
+                  : _buildTimeline(context, entries),
             ),
-          ),
-          data: (entries) => entries.isEmpty
-              ? const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: Text('아직 기록이 없어요.')),
-                )
-              : _buildTimeline(context, entries),
+            const SliverToBoxAdapter(child: SizedBox(height: 120)),
+          ],
         ),
-        const SliverToBoxAdapter(child: SizedBox(height: 120)),
+        // 글래스 고정 헤더
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _LogsGlassHeader(topPadding: topPadding),
+        ),
       ],
     );
   }
@@ -251,22 +245,18 @@ class _TimelineItem extends StatelessWidget {
 
 // ─── 상단 헤더 ────────────────────────────────────────────────────────────────
 
-class _LogsHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const _LogsHeaderDelegate({required this.topPadding});
+class _LogsGlassHeader extends StatelessWidget {
+  const _LogsGlassHeader({required this.topPadding});
 
   final double topPadding;
 
   @override
-  double get minExtent => topPadding + 64;
-  @override
-  double get maxExtent => topPadding + 64;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(BuildContext context) {
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
+          height: topPadding + 64,
           color: const Color(0xFFF8F9FB).withValues(alpha: 0.75),
           padding: EdgeInsets.only(top: topPadding, left: 24, right: 24),
           alignment: Alignment.centerLeft,
@@ -283,7 +273,4 @@ class _LogsHeaderDelegate extends SliverPersistentHeaderDelegate {
       ),
     );
   }
-
-  @override
-  bool shouldRebuild(_LogsHeaderDelegate old) => old.topPadding != topPadding;
 }

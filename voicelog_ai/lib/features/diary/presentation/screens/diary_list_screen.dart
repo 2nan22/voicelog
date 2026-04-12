@@ -16,27 +16,16 @@ import 'package:voicelog_ai/features/diary/presentation/widgets/diary_card.dart'
 /// 날짜별 그룹핑된 일기 목록 화면 (Shell body).
 ///
 /// Scaffold는 MainShell이 소유. 이 위젯은 body만 반환한다.
-class DiaryListBody extends ConsumerStatefulWidget {
+///
+/// 주의: SliverPersistentHeader(pinned) + BackdropFilter 조합은
+/// ShellRoute 탭 전환 후 semantics.parentDataDirty assertion을 유발하여
+/// 렌더링 트리가 dirty 상태로 남고 touch 이벤트가 완전히 차단된다.
+/// 따라서 고정 헤더는 Stack + Positioned 패턴으로 구현한다.
+class DiaryListBody extends ConsumerWidget {
   const DiaryListBody({super.key});
 
   @override
-  ConsumerState<DiaryListBody> createState() => _DiaryListBodyState();
-}
-
-class _DiaryListBodyState extends ConsumerState<DiaryListBody> {
-  @override
-  void initState() {
-    super.initState();
-    // BackdropFilter + SliverPersistentHeader(pinned) 조합이 Android 첫 프레임에서
-    // 컴포지팅 레이어를 구성하지 못해 화면이 비어 보이는 Flutter 이슈.
-    // 첫 프레임 완료 후 강제 리빌드로 해결.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final diariesAsync = ref.watch(diaryListNotifierProvider);
     final topPadding = MediaQuery.of(context).padding.top;
 
@@ -44,11 +33,8 @@ class _DiaryListBodyState extends ConsumerState<DiaryListBody> {
       children: [
         CustomScrollView(
           slivers: [
-            // 고정 글래스 상단 네비게이션
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _GlassNavDelegate(topPadding: topPadding),
-            ),
+            // 고정 헤더 높이만큼 상단 여백 (헤더는 Stack Positioned으로 처리)
+            SliverToBoxAdapter(child: SizedBox(height: topPadding + 64)),
             // 히어로 섹션
             SliverToBoxAdapter(
               child: Padding(
@@ -111,6 +97,13 @@ class _DiaryListBodyState extends ConsumerState<DiaryListBody> {
             // 하단 nav 높이만큼 여백
             const SliverToBoxAdapter(child: SizedBox(height: 120)),
           ],
+        ),
+        // 글래스 고정 헤더 (SliverPersistentHeader 대체)
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _GlassNavWidget(topPadding: topPadding),
         ),
         // FAB — Stack 하단 우측에 배치 (Scaffold 외부이므로 floatingActionButton 사용 불가)
         Positioned(
@@ -190,23 +183,22 @@ class _HeroSection extends StatelessWidget {
 }
 
 // ─── 고정 글래스 상단 네비게이션 ──────────────────────────────────────────────
+// SliverPersistentHeaderDelegate 대신 일반 위젯으로 구현.
+// SliverPersistentHeader(pinned) + BackdropFilter는 ShellRoute 탭 전환 후
+// semantics.parentDataDirty assertion + touch 이벤트 차단을 유발한다.
 
-class _GlassNavDelegate extends SliverPersistentHeaderDelegate {
-  const _GlassNavDelegate({required this.topPadding});
+class _GlassNavWidget extends StatelessWidget {
+  const _GlassNavWidget({required this.topPadding});
 
   final double topPadding;
 
   @override
-  double get minExtent => topPadding + 64;
-  @override
-  double get maxExtent => topPadding + 64;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(BuildContext context) {
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
+          height: topPadding + 64,
           color: const Color(0xFFF8F9FB).withValues(alpha: 0.75),
           padding: EdgeInsets.only(top: topPadding, left: 24, right: 8),
           child: Row(
@@ -233,9 +225,6 @@ class _GlassNavDelegate extends SliverPersistentHeaderDelegate {
       ),
     );
   }
-
-  @override
-  bool shouldRebuild(_GlassNavDelegate old) => old.topPadding != topPadding;
 }
 
 // ─── 통계 벤토 ────────────────────────────────────────────────────────────────

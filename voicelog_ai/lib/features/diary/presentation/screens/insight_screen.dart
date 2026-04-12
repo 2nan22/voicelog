@@ -8,82 +8,77 @@ import 'package:voicelog_ai/core/widgets/loading_shimmer.dart';
 import 'package:voicelog_ai/features/diary/application/insight_provider.dart';
 import 'package:voicelog_ai/features/diary/presentation/widgets/emotion_donut_chart.dart';
 
-class InsightScreen extends ConsumerStatefulWidget {
+class InsightScreen extends ConsumerWidget {
   const InsightScreen({super.key});
 
   @override
-  ConsumerState<InsightScreen> createState() => _InsightScreenState();
-}
-
-class _InsightScreenState extends ConsumerState<InsightScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final topPadding = MediaQuery.of(context).padding.top;
     final emotionAsync = ref.watch(emotionCountsProvider);
     final streakAsync = ref.watch(writingStreakProvider);
     final topTagsAsync = ref.watch(topTagsProvider);
 
-    return CustomScrollView(
-      slivers: [
-        // 상단 헤더
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: _InsightHeaderDelegate(topPadding: topPadding),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── 스트릭 카드
-                streakAsync.when(
-                  loading: () => const LoadingShimmer(height: 80, borderRadius: 20),
-                  error: (_, __) => const SizedBox.shrink(),
-                  data: (streak) => _StreakCard(streak: streak),
+    return Stack(
+      children: [
+        CustomScrollView(
+          slivers: [
+            // 고정 헤더 높이만큼 상단 여백
+            SliverToBoxAdapter(child: SizedBox(height: topPadding + 64)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── 스트릭 카드
+                    streakAsync.when(
+                      loading: () => const LoadingShimmer(height: 80, borderRadius: 20),
+                      error: (_, __) => const SizedBox.shrink(),
+                      data: (streak) => _StreakCard(streak: streak),
+                    ),
+                    const SizedBox(height: 20),
+                    // ── 감정 분포 섹션
+                    Text(
+                      '감정 분포',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF191C1E),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    emotionAsync.when(
+                      loading: () => const LoadingShimmer(height: 200, borderRadius: 24),
+                      error: (_, __) => const SizedBox.shrink(),
+                      data: (counts) => _EmotionSection(counts: counts),
+                    ),
+                    const SizedBox(height: 24),
+                    // ── 자주 쓴 태그
+                    Text(
+                      '자주 쓴 태그',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF191C1E),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    topTagsAsync.when(
+                      loading: () => const LoadingShimmer(height: 120, borderRadius: 20),
+                      error: (_, __) => const SizedBox.shrink(),
+                      data: (tags) => _TagSection(tags: tags),
+                    ),
+                    const SizedBox(height: 120), // 하단 탭 여백
+                  ],
                 ),
-                const SizedBox(height: 20),
-                // ── 감정 분포 섹션
-                Text(
-                  '감정 분포',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF191C1E),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                emotionAsync.when(
-                  loading: () => const LoadingShimmer(height: 200, borderRadius: 24),
-                  error: (_, __) => const SizedBox.shrink(),
-                  data: (counts) => _EmotionSection(counts: counts),
-                ),
-                const SizedBox(height: 24),
-                // ── 자주 쓴 태그
-                Text(
-                  '자주 쓴 태그',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF191C1E),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                topTagsAsync.when(
-                  loading: () => const LoadingShimmer(height: 120, borderRadius: 20),
-                  error: (_, __) => const SizedBox.shrink(),
-                  data: (tags) => _TagSection(tags: tags),
-                ),
-                const SizedBox(height: 120), // 하단 탭 여백
-              ],
+              ),
             ),
-          ),
+          ],
+        ),
+        // 글래스 고정 헤더
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _InsightGlassHeader(topPadding: topPadding),
         ),
       ],
     );
@@ -329,21 +324,17 @@ class _TagSection extends StatelessWidget {
 
 // ─── 상단 헤더 ────────────────────────────────────────────────────────────────
 
-class _InsightHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const _InsightHeaderDelegate({required this.topPadding});
+class _InsightGlassHeader extends StatelessWidget {
+  const _InsightGlassHeader({required this.topPadding});
   final double topPadding;
 
   @override
-  double get minExtent => topPadding + 64;
-  @override
-  double get maxExtent => topPadding + 64;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(BuildContext context) {
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
+          height: topPadding + 64,
           color: const Color(0xFFF8F9FB).withValues(alpha: 0.75),
           padding: EdgeInsets.only(top: topPadding, left: 24, right: 24),
           alignment: Alignment.centerLeft,
@@ -360,7 +351,4 @@ class _InsightHeaderDelegate extends SliverPersistentHeaderDelegate {
       ),
     );
   }
-
-  @override
-  bool shouldRebuild(_InsightHeaderDelegate old) => old.topPadding != topPadding;
 }

@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "voicelog_ai (debug)",
+      "request": "launch",
+      "type": "dart",
+      "args": ["--enable-experiment=native-assets"]
+    },
+    {
+      "name": "voicelog_ai (release)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release",
+      "args": ["--enable-experiment=native-assets"]
+    }
+  ]
+}
