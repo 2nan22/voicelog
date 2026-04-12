@@ -1,10 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:audioplayers/audioplayers.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:record/record.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -43,28 +39,10 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
   Timer? _inferenceTimer;
   int _elapsedSeconds = 0;
 
-  // ── 오디오 녹음 · 재생 ──────────────────────────────────────────────────────
-  final _audioRecorder = AudioRecorder();
-  final _audioPlayer = AudioPlayer();
-  String? _recordedFilePath;
-  bool _isPlaying = false;
-  late final StreamSubscription<PlayerState> _playerStateSub;
-
-  @override
-  void initState() {
-    super.initState();
-    _playerStateSub = _audioPlayer.onPlayerStateChanged.listen((playerState) {
-      if (mounted) setState(() => _isPlaying = playerState == PlayerState.playing);
-    });
-  }
-
   @override
   void dispose() {
     _recordingTimer?.cancel();
     _inferenceTimer?.cancel();
-    _playerStateSub.cancel();
-    unawaited(_audioRecorder.dispose());
-    unawaited(_audioPlayer.dispose());
     super.dispose();
   }
 
@@ -84,49 +62,6 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     final m = _elapsedSeconds ~/ 60;
     final s = _elapsedSeconds % 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
-
-  // ── 오디오 녹음 ─────────────────────────────────────────────────────────────
-
-  Future<void> _startAudioRecording() async {
-    try {
-      final dir = await getTemporaryDirectory();
-      _recordedFilePath =
-          '${dir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.m4a';
-      await _audioRecorder.start(
-        const RecordConfig(encoder: AudioEncoder.aacLc),
-        path: _recordedFilePath!,
-      );
-    } catch (e) {
-      AppLogger.error('오디오 녹음 시작 실패', e);
-    }
-  }
-
-  Future<void> _stopAudioRecording() async {
-    try {
-      await _audioRecorder.stop();
-    } catch (e) {
-      AppLogger.error('오디오 녹음 중지 실패', e);
-    }
-  }
-
-  // ── 오디오 재생 ─────────────────────────────────────────────────────────────
-
-  void _togglePlayback() {
-    unawaited(_doTogglePlayback());
-  }
-
-  Future<void> _doTogglePlayback() async {
-    if (_recordedFilePath == null) return;
-    try {
-      if (_audioPlayer.state == PlayerState.playing) {
-        await _audioPlayer.pause();
-      } else {
-        await _audioPlayer.play(DeviceFileSource(_recordedFilePath!));
-      }
-    } catch (e) {
-      AppLogger.error('오디오 재생 실패', e);
-    }
   }
 
   // ── LLM 추론 타임아웃 ────────────────────────────────────────────────────────
@@ -206,8 +141,6 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     ref.read(sttTextNotifierProvider.notifier).clear();
     ref.read(diaryProcessNotifierProvider.notifier).reset();
     ref.read(amplitudesNotifierProvider.notifier).clear();
-    _recordedFilePath = null;
-    unawaited(_audioPlayer.stop());
     _stopTimer();
     setState(() => _elapsedSeconds = 0);
   }
@@ -267,15 +200,16 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final scheme = Theme.of(context).colorScheme;
 
-    // 상태 변화 감지 — 타이머·오디오·LLM 흐름 관리 (로직 변경 없음)
+    // 상태 변화 감지 — 타이머·LLM 흐름 관리
+    // NOTE: 오디오 녹음(record 패키지)은 Android 12+에서 SpeechRecognizer와
+    //        마이크를 동시에 사용할 수 없어 STT가 즉시 error_speech_timeout됨.
+    //        재생 기능은 추후 단일 오디오 캡처 아키텍처로 재구현 예정.
     ref.listen<RecordingState>(diaryRecordNotifierProvider, (prev, next) {
       if (prev != RecordingState.recording && next == RecordingState.recording) {
         _startTimer();
-        unawaited(_startAudioRecording());
       } else if (prev == RecordingState.recording &&
           next != RecordingState.recording) {
         _stopTimer();
-        unawaited(_stopAudioRecording());
       }
       if (prev != RecordingState.processing &&
           next == RecordingState.processing) {
@@ -314,7 +248,7 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
                       const Flexible(child: SizedBox()),
                       // 상태 배지
                       _RecordingStateBadge(state: recordingState),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       // 상태별 대형 헤딩
                       Text(
                         _headingText(recordingState),
@@ -324,15 +258,17 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
                           height: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       // 서브 텍스트
                       Text(
                         _subtitleText(recordingState),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       // STT/LLM 통합 글래스모픽 컨테이너
                       _GlassSttContainer(
                         sttText: sttText,
@@ -356,11 +292,10 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
                         child: _ControlsRow(
                           recordingState: recordingState,
                           timerDisplay: _timerDisplay,
-                          isPlaying: _isPlaying,
                           onDelete: _onDelete,
                           onFinishRecording: _onFinishRecording,
                           onSave: _onSave,
-                          onPlayback: _togglePlayback,
+                          onPlayback: null,
                         ),
                       ),
                       SizedBox(height: bottomPadding + 24),
@@ -595,8 +530,8 @@ class _GlassSttContainer extends ConsumerWidget {
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           width: double.infinity,
-          constraints: const BoxConstraints(minHeight: 200),
-          padding: const EdgeInsets.all(28),
+          constraints: const BoxConstraints(minHeight: 180),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(40),
@@ -659,24 +594,29 @@ class _GlassSttContainer extends ConsumerWidget {
   Widget _buildLlmContent(BuildContext context, dynamic parsedResult, String rawAccumulated) {
     final scheme = Theme.of(context).colorScheme;
 
-    // processing + 스트리밍 텍스트 없음 → 스피너 + 메시지
+    // processing + 아직 스트리밍 시작 전 → 스피너 + 메시지
+    // done + rawAccumulated 없음 → LLM을 거치지 않은 상태 (STT 텍스트 없이 완료)
     if (rawAccumulated.isEmpty) {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            color: scheme.primary,
-            strokeWidth: 2.5,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '생각을 정리하고 있어요...',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.onSurfaceVariant,
+      if (recordingState == RecordingState.processing) {
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: scheme.primary,
+              strokeWidth: 2.5,
             ),
-          ),
-        ],
-      );
+            const SizedBox(height: 16),
+            Text(
+              '생각을 정리하고 있어요...',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ],
+        );
+      }
+      // done 상태지만 LLM 결과 없음 → 빈 상태 표시
+      return const SizedBox.shrink();
     }
 
     return Column(
@@ -826,7 +766,6 @@ class _ControlsRow extends StatelessWidget {
   const _ControlsRow({
     required this.recordingState,
     required this.timerDisplay,
-    required this.isPlaying,
     required this.onDelete,
     required this.onFinishRecording,
     required this.onSave,
@@ -835,11 +774,10 @@ class _ControlsRow extends StatelessWidget {
 
   final RecordingState recordingState;
   final String timerDisplay;
-  final bool isPlaying;
   final VoidCallback onDelete;
   final VoidCallback onFinishRecording;
   final Future<void> Function() onSave;
-  final VoidCallback onPlayback;
+  final VoidCallback? onPlayback;
 
   @override
   Widget build(BuildContext context) {
@@ -894,7 +832,7 @@ class _ControlsRow extends StatelessWidget {
 
   Widget _buildCenterButton() => switch (recordingState) {
     RecordingState.done => _RoundButton(
-        icon: isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+        icon: Icons.play_arrow_rounded,
         tooltip: AppStrings.btnPlayRecording,
         onTap: onPlayback,
         isFilled: true,

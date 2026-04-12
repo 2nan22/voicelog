@@ -13,6 +13,10 @@ class SpeechToTextService {
   /// permanent=true 이면 해당 listen 세션이 완전히 종료된 것이다.
   void Function(String errorMsg, bool permanent)? _listeningErrorCallback;
 
+  /// startListening() 호출 시 등록되는 상태 콜백.
+  /// 'listening', 'notListening', 'done' 등의 상태값을 전달한다.
+  void Function(String status)? _statusCallback;
+
   bool get isInitialized => _isInitialized;
 
   /// STT 엔진 초기화 및 권한 요청.
@@ -22,7 +26,13 @@ class SpeechToTextService {
     try {
       _isInitialized = await _stt.initialize(
         onError: _onError,
-        onStatus: (status) => AppLogger.info('STT 상태: $status'),
+        onStatus: (status) {
+          AppLogger.info('STT 상태: $status');
+          if (status == 'notListening') {
+            AppLogger.info('STT notListening — onResult 발생 여부는 콜백 로그 확인');
+          }
+          _statusCallback?.call(status);
+        },
       );
       return _isInitialized;
     } catch (e) {
@@ -35,21 +45,28 @@ class SpeechToTextService {
   /// [onResult]: 인식 결과 콜백 (중간 결과 포함)
   /// [onAmplitude]: 마이크 음량 레벨 콜백 (0.0 ~ 1.0 정규화)
   /// [onError]: STT 오류 콜백. permanent=true 이면 세션이 완전히 종료된 것이다.
+  /// [onStatus]: STT 상태 변화 콜백. 'listening'·'notListening'·'done' 등을 전달한다.
   Future<void> startListening({
     required void Function(String text, bool isFinal) onResult,
     void Function(double amplitude)? onAmplitude,
     void Function(String errorMsg, bool permanent)? onError,
+    void Function(String status)? onStatus,
   }) async {
     _listeningErrorCallback = onError;
+    _statusCallback = onStatus;
     if (!_isInitialized) {
       AppLogger.warn('STT가 초기화되지 않았습니다.');
       return;
     }
     await _stt.listen(
-      onResult: (result) => onResult(
-        result.recognizedWords,
-        result.finalResult,
-      ),
+      onResult: (result) {
+        AppLogger.info(
+          'STT onResult: words="${result.recognizedWords}" '
+          'final=${result.finalResult} '
+          'confidence=${result.alternates.firstOrNull?.confidence}',
+        );
+        onResult(result.recognizedWords, result.finalResult);
+      },
       onSoundLevelChange: onAmplitude == null
           ? null
           : (double level) {
@@ -58,17 +75,25 @@ class SpeechToTextService {
               onAmplitude(normalized);
             },
       localeId: 'ko_KR',
-      pauseFor: const Duration(seconds: 3), // 3초 침묵 시 자동 중지
+      listenFor: const Duration(seconds: 60), // 최대 60초 세션
+      pauseFor: const Duration(seconds: 8),   // 8초 침묵 시 자동 중지
+      listenOptions: SpeechListenOptions(
+        cancelOnError: false,
+        listenMode: ListenMode.dictation,     // 연속 받아쓰기 모드 (Samsung 타임아웃 연장)
+        partialResults: true,                 // 중간 결과 활성화
+      ),
     );
   }
 
   Future<void> stopListening() async {
     _listeningErrorCallback = null;
+    _statusCallback = null;
     await _stt.stop();
   }
 
   Future<void> cancelListening() async {
     _listeningErrorCallback = null;
+    _statusCallback = null;
     await _stt.cancel();
   }
 
