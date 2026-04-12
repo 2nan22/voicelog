@@ -10,9 +10,9 @@ import 'package:voicelog_ai/core/theme/app_colors.dart';
 import 'package:voicelog_ai/features/diary/application/diary_list_provider.dart';
 import 'package:voicelog_ai/features/diary/domain/diary_entry.dart';
 
-/// 일기 상세 화면.
+/// 일기 상세 화면 — Stitch v0.0.2 에디토리얼 레이아웃.
 ///
-/// Stitch 디자인 기준: 글래스 헤더 + 날짜 배지 + 대제목 + 감정·태그 필 칩 + 본문 + 원문 접기 섹션.
+/// 에디토리얼 헤더 + 감정·키워드 2열 그리드 + prose 본문 + 원본 텍스트 토글 카드.
 class DiaryDetailScreen extends ConsumerWidget {
   const DiaryDetailScreen({super.key, required this.entryId});
 
@@ -57,21 +57,6 @@ class _DiaryDetailBody extends ConsumerWidget {
     _ => AppColors.emotionCalm,
   };
 
-  /// 첫 문장(50자 이내) 또는 50자 요약을 대제목으로 추출.
-  String _extractHeadline(String text) {
-    final dotIdx = text.indexOf('.');
-    final korPeriodIdx = text.indexOf('。');
-    final candidates = [
-      if (dotIdx > 0 && dotIdx <= 50) dotIdx,
-      if (korPeriodIdx > 0 && korPeriodIdx <= 50) korPeriodIdx,
-    ];
-    if (candidates.isNotEmpty) {
-      final end = candidates.reduce((a, b) => a < b ? a : b);
-      return text.substring(0, end + 1);
-    }
-    return text.length > 50 ? '${text.substring(0, 50)}...' : text;
-  }
-
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -86,7 +71,7 @@ class _DiaryDetailBody extends ConsumerWidget {
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFBA1A1A), // error color
+              backgroundColor: const Color(0xFFBA1A1A),
             ),
             child: const Text(AppStrings.deleteDiary),
           ),
@@ -104,7 +89,7 @@ class _DiaryDetailBody extends ConsumerWidget {
     final topPadding = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F4F6),
+      backgroundColor: AppColors.background,
       extendBodyBehindAppBar: true,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(topPadding + 64),
@@ -115,80 +100,24 @@ class _DiaryDetailBody extends ConsumerWidget {
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.only(
-          top: topPadding + 64 + 24,
+          top: topPadding + 64 + 32,
           left: 24,
           right: 24,
-          bottom: 56,
+          bottom: 64,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 날짜 배지 + 시간
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFD7E2FF).withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: Text(
-                    entry.createdAt.toKoreanDate(),
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                      color: Color(0xFF004491),
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  entry.createdAt.toKoreanTime(),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF414754),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            // 대제목 (첫 문장 or 50자)
-            Text(
-              _extractHeadline(entry.correctedText),
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
-                height: 1.3,
-                color: Color(0xFF191C1E),
-              ),
-            ),
-            const SizedBox(height: 28),
-            // 감정 칩 + 태그 칩
-            Wrap(
-              spacing: 10,
-              runSpacing: 8,
-              children: [
-                _EmotionPill(emotion: entry.emotion, color: _emotionColor),
-                ...entry.tags.map((t) => _TagPill(tag: t)),
-              ],
-            ),
-            const SizedBox(height: 32),
-            // 본문 (line-height 2.0)
-            Text(
-              entry.correctedText,
-              style: const TextStyle(
-                fontSize: 17,
-                height: 2.0,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF191C1E),
-                letterSpacing: 0.15,
-              ),
-            ),
+            // 에디토리얼 헤더 (소제목 + 대제목 + 태그 행)
+            _EditorialHeader(entry: entry, emotionColor: _emotionColor),
             const SizedBox(height: 40),
-            // 원문 접기/펼치기
+            // 감정·키워드 2열 그리드
+            _EmotionKeywordGrid(entry: entry, emotionColor: _emotionColor),
+            const SizedBox(height: 40),
+            // 본문 prose
+            _ProseBody(text: entry.correctedText),
+            const SizedBox(height: 40),
+            // 원본 텍스트 토글 카드
             _OriginalTextSection(rawText: entry.rawText),
           ],
         ),
@@ -210,11 +139,13 @@ class _GlassAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return ClipRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
-          color: const Color(0xFFF8F9FB).withValues(alpha: 0.7),
+          color: Colors.white.withValues(alpha: 0.8),
           padding: EdgeInsets.only(top: topPadding, left: 8, right: 8),
           child: SizedBox(
             height: 64,
@@ -222,19 +153,19 @@ class _GlassAppBar extends StatelessWidget {
               children: [
                 IconButton(
                   icon: const Icon(Icons.arrow_back_rounded, size: 24),
-                  color: const Color(0xFF191C1E),
+                  color: AppColors.onSurfaceVariant,
                   tooltip: '뒤로',
                   onPressed: () => context.pop(),
                 ),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Diary Detail',
+                    AppStrings.appName,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.4,
-                      color: Color(0xFF191C1E),
+                      color: scheme.primary,
                     ),
                   ),
                 ),
@@ -253,10 +184,85 @@ class _GlassAppBar extends StatelessWidget {
   }
 }
 
-// ─── 감정 필 칩 ───────────────────────────────────────────────────────────────
+// ─── 에디토리얼 헤더 ──────────────────────────────────────────────────────────
 
-class _EmotionPill extends StatelessWidget {
-  const _EmotionPill({required this.emotion, required this.color});
+class _EditorialHeader extends StatelessWidget {
+  const _EditorialHeader({
+    required this.entry,
+    required this.emotionColor,
+  });
+
+  final DiaryEntry entry;
+  final Color emotionColor;
+
+  static const _weekDays = ['월', '화', '수', '목', '금', '토', '일'];
+
+  String get _dateHeading {
+    final d = entry.createdAt;
+    final weekDay = _weekDays[d.weekday - 1];
+    return '${d.month}월 ${d.day}일 $weekDay요일';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 소제목 (Primary, 극소, 넓은 자간, uppercase)
+        Text(
+          '오늘의 기록',
+          style: TextStyle(
+            color: scheme.primary,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 3.0,
+          ),
+        ),
+        const SizedBox(height: 12),
+        // 대제목 — 날짜 + 감정 요약
+        RichText(
+          text: TextSpan(
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              height: 1.2,
+              color: AppColors.onSurface,
+              letterSpacing: -0.5,
+            ),
+            children: [
+              TextSpan(text: _dateHeading),
+              const TextSpan(
+                text: '  |  ',
+                style: TextStyle(
+                  color: AppColors.outlineVariant,
+                  fontWeight: FontWeight.w300,
+                ),
+              ),
+              TextSpan(
+                text: entry.emotion,
+                style: TextStyle(color: emotionColor),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        // 태그 행 (감정 pill + 시각 pill)
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _EmotionTag(emotion: entry.emotion, color: emotionColor),
+            _TimeTag(time: entry.createdAt.toKoreanTime()),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _EmotionTag extends StatelessWidget {
+  const _EmotionTag({required this.emotion, required this.color});
 
   final String emotion;
   final Color color;
@@ -264,35 +270,27 @@ class _EmotionPill extends StatelessWidget {
   IconData get _icon => switch (emotion) {
     '기쁨' => Icons.sentiment_very_satisfied_rounded,
     '슬픔' => Icons.sentiment_dissatisfied_rounded,
-    '평온' => Icons.sentiment_satisfied_alt_rounded,
-    '화남' => Icons.sentiment_very_dissatisfied_rounded,
-    _ => Icons.mood_rounded,
+    '화남' => Icons.mood_bad_rounded,
+    _     => Icons.sentiment_satisfied_alt_rounded,
   };
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(99),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08191C1E),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(_icon, size: 16, color: color),
+          Icon(_icon, size: 14, color: color),
           const SizedBox(width: 6),
           Text(
             emotion,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               color: color,
             ),
@@ -303,37 +301,200 @@ class _EmotionPill extends StatelessWidget {
   }
 }
 
-// ─── 태그 필 칩 ───────────────────────────────────────────────────────────────
+class _TimeTag extends StatelessWidget {
+  const _TimeTag({required this.time});
 
-class _TagPill extends StatelessWidget {
-  const _TagPill({required this.tag});
-
-  final String tag;
+  final String time;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
-        color: const Color(0xFFECEEF0),
+        color: AppColors.surfaceContainer,
         borderRadius: BorderRadius.circular(99),
-        border: Border.all(
-          color: const Color(0xFFC1C6D6).withValues(alpha: 0.3),
-        ),
       ),
       child: Text(
-        tag,
+        time,
         style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          color: Color(0xFF414754),
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.onSurfaceVariant,
         ),
       ),
     );
   }
 }
 
-// ─── 원문 접기/펼치기 섹션 ───────────────────────────────────────────────────
+// ─── 감정·키워드 2열 그리드 ────────────────────────────────────────────────────
+
+class _EmotionKeywordGrid extends StatelessWidget {
+  const _EmotionKeywordGrid({
+    required this.entry,
+    required this.emotionColor,
+  });
+
+  final DiaryEntry entry;
+  final Color emotionColor;
+
+  IconData get _emotionBgIcon => switch (entry.emotion) {
+    '기쁨' => Icons.sentiment_satisfied_rounded,
+    '슬픔' => Icons.sentiment_dissatisfied_rounded,
+    '화남' => Icons.mood_bad_rounded,
+    _     => Icons.self_improvement_rounded,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 좌: 감정 카드
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: emotionColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '주요 감정',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.5,
+                      color: Colors.white.withValues(alpha: 0.75),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    entry.emotion,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      height: 1.1,
+                    ),
+                  ),
+                  const Spacer(),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Icon(
+                      _emotionBgIcon,
+                      size: 48,
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // 우: 키워드 카드
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '주요 키워드',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.5,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: entry.tags.map((tag) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: AppColors.outlineVariant,
+                          ),
+                        ),
+                        child: Text(
+                          tag,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.onSurface,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── 본문 prose ───────────────────────────────────────────────────────────────
+
+class _ProseBody extends StatelessWidget {
+  const _ProseBody({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    // 단락 분리 (줄바꿈 기준)
+    final paragraphs = text
+        .split('\n')
+        .where((p) => p.trim().isNotEmpty)
+        .toList();
+
+    if (paragraphs.isEmpty) {
+      return Text(
+        text,
+        style: _proseStyle,
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int i = 0; i < paragraphs.length; i++) ...[
+          Text(paragraphs[i], style: _proseStyle),
+          if (i < paragraphs.length - 1) const SizedBox(height: 32),
+        ],
+      ],
+    );
+  }
+
+  static const TextStyle _proseStyle = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w400,
+    height: 1.9,
+    color: AppColors.onSurfaceVariant,
+    letterSpacing: -0.3,
+  );
+}
+
+// ─── 원본 텍스트 토글 카드 ────────────────────────────────────────────────────
 
 class _OriginalTextSection extends StatefulWidget {
   const _OriginalTextSection({required this.rawText});
@@ -349,34 +510,39 @@ class _OriginalTextSectionState extends State<_OriginalTextSection> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F4F6),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
+          // 토글 헤더
           InkWell(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             onTap: () => setState(() => _expanded = !_expanded),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.graphic_eq_rounded,
-                    size: 20,
-                    color: Color(0xFF414754),
-                  ),
+                  Icon(Icons.mic_rounded, size: 20, color: scheme.primary),
                   const SizedBox(width: 12),
                   const Expanded(
                     child: Text(
-                      'VIEW ORIGINAL RECORDING',
+                      '음성 기록 및 원본 텍스트',
                       style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.8,
-                        color: Color(0xFF414754),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurface,
                       ),
                     ),
                   ),
@@ -386,20 +552,22 @@ class _OriginalTextSectionState extends State<_OriginalTextSection> {
                     child: const Icon(
                       Icons.expand_more_rounded,
                       size: 22,
-                      color: Color(0xFF414754),
+                      color: AppColors.onSurfaceVariant,
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          if (_expanded)
-            Container(
+          // 원본 텍스트 (펼쳐질 때)
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Container(
               margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
                 '"${widget.rawText}"',
@@ -407,10 +575,14 @@ class _OriginalTextSectionState extends State<_OriginalTextSection> {
                   fontSize: 14,
                   fontStyle: FontStyle.italic,
                   height: 1.9,
-                  color: Color(0xFF727785),
+                  color: AppColors.onSurfaceVariant,
                 ),
               ),
             ),
+            crossFadeState:
+                _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
         ],
       ),
     );

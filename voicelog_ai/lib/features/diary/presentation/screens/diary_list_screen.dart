@@ -447,11 +447,11 @@ class _GlassNavWidget extends StatelessWidget {
               Container(
                 width: 32,
                 height: 32,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.surfaceContainer,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.person_rounded,
                   size: 18,
                   color: AppColors.onSurfaceVariant,
