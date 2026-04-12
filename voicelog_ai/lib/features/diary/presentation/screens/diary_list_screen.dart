@@ -16,11 +16,27 @@ import 'package:voicelog_ai/features/diary/presentation/widgets/diary_card.dart'
 /// 날짜별 그룹핑된 일기 목록 화면.
 ///
 /// Stitch 디자인 기준: glass 상단 nav + 히어로 섹션 + 통계 벤토 + 일기 목록 + glass 하단 nav
-class DiaryListScreen extends ConsumerWidget {
+class DiaryListScreen extends ConsumerStatefulWidget {
   const DiaryListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DiaryListScreen> createState() => _DiaryListScreenState();
+}
+
+class _DiaryListScreenState extends ConsumerState<DiaryListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // BackdropFilter + SliverPersistentHeader(pinned) 조합이 Android 첫 프레임에서
+    // 컴포지팅 레이어를 구성하지 못해 화면이 비어 보이는 Flutter 이슈.
+    // 첫 프레임 완료 후 강제 리빌드로 해결.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final diariesAsync = ref.watch(diaryListNotifierProvider);
     final topPadding = MediaQuery.of(context).padding.top;
 
