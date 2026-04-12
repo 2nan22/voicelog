@@ -85,9 +85,12 @@ class LlmInferenceChannel(private val context: Context) : MethodChannel.MethodCa
         }
         try {
             llmInference?.close()
+            // Backend.CPU = 새 LiteRT CPU 경로 (Qwen2.5 input mask 지원)
+            // Backend.GPU는 Exynos 2200 (S23 FE KR)에서 libvndksupport.so 미존재로 SIGSEGV 발생 — 사용 금지
             val options = LlmInference.LlmInferenceOptions.builder()
                 .setModelPath(modelPath)
                 .setMaxTokens(1024)
+                .setPreferredBackend(LlmInference.Backend.CPU)
                 .build()
             llmInference = LlmInference.createFromOptions(context, options)
             result.success(null)
@@ -101,4 +104,5 @@ class LlmInferenceChannel(private val context: Context) : MethodChannel.MethodCa
         llmInference = null
         result.success(null)
     }
+
 }

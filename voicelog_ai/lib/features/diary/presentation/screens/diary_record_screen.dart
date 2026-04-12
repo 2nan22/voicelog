@@ -62,10 +62,10 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
-  /// LLM 추론 30초 초과 시 경고 다이얼로그를 표시한다.
+  /// LLM 추론이 [kInferenceTimeoutSeconds] 초과 시 경고 다이얼로그를 표시한다.
   void _startInferenceTimer() {
     _inferenceTimer?.cancel();
-    _inferenceTimer = Timer(const Duration(seconds: 30), () {
+    _inferenceTimer = Timer(const Duration(seconds: kInferenceTimeoutSeconds), () {
       if (!mounted) return;
       showDialog<void>(
         context: context,
