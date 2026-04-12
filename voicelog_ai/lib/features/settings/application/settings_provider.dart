@@ -12,15 +12,31 @@ class SettingsNotifier extends _$SettingsNotifier {
   Future<AppSettings> build() async {
     final isar = await ref.watch(isarProvider.future);
     final doc = await isar.appSettingsDocuments.get(0);
-    return AppSettings(isDarkMode: doc?.isDarkMode ?? false);
+    return AppSettings(
+      isDarkMode: doc?.isDarkMode ?? false,
+      writingStyle: WritingStyle.values[doc?.writingStyleIndex ?? 0],
+    );
   }
 
   Future<void> setDarkMode(bool value) async {
+    final current = await future;
     final isar = await ref.read(isarProvider.future);
     final doc = AppSettingsDocument()
       ..id = 0
-      ..isDarkMode = value;
+      ..isDarkMode = value
+      ..writingStyleIndex = current.writingStyle.index;
     await isar.writeTxn(() => isar.appSettingsDocuments.put(doc));
-    state = AsyncData(AppSettings(isDarkMode: value));
+    state = AsyncData(current.copyWith(isDarkMode: value));
+  }
+
+  Future<void> setWritingStyle(WritingStyle value) async {
+    final current = await future;
+    final isar = await ref.read(isarProvider.future);
+    final doc = AppSettingsDocument()
+      ..id = 0
+      ..isDarkMode = current.isDarkMode
+      ..writingStyleIndex = value.index;
+    await isar.writeTxn(() => isar.appSettingsDocuments.put(doc));
+    state = AsyncData(current.copyWith(writingStyle: value));
   }
 }

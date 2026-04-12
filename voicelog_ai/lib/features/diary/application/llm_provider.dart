@@ -3,6 +3,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:voicelog_ai/core/constants/prompts.dart';
 import 'package:voicelog_ai/features/diary/domain/i_llm_inference_service.dart';
 import 'package:voicelog_ai/features/diary/infrastructure/llm_inference_service.dart';
+import 'package:voicelog_ai/features/settings/application/settings_provider.dart';
+import 'package:voicelog_ai/features/settings/domain/app_settings.dart';
 
 part 'llm_provider.g.dart';
 
@@ -39,6 +41,12 @@ Stream<String> llmStream(LlmStreamRef ref, String rawText) {
       StateError('LLM 서비스가 아직 준비되지 않았습니다. warm-up을 먼저 완료하세요.'),
     );
   }
-  final prompt = kDiaryProcessingPrompt.replaceAll('{raw_text}', rawText);
+  final settingsAsync = ref.watch(settingsNotifierProvider);
+  final writingStyle = settingsAsync.valueOrNull?.writingStyle ?? WritingStyle.diary;
+  final styleInstruction =
+      kWritingStyleInstructions[writingStyle] ?? kWritingStyleInstructions[WritingStyle.diary]!;
+  final prompt = kDiaryProcessingPrompt
+      .replaceAll('{style_instruction}', styleInstruction)
+      .replaceAll('{raw_text}', rawText);
   return service.generateStream(prompt);
 }

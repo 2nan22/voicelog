@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:voicelog_ai/core/constants/strings.dart';
 import 'package:voicelog_ai/features/settings/application/settings_provider.dart';
+import 'package:voicelog_ai/features/settings/domain/app_settings.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -48,6 +49,12 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 28),
+
+                    // ── AI 문체 섹션 ──────────────────────────────────
+                    const _SectionHeader(title: 'AI 문체'),
+                    const SizedBox(height: 10),
+                    _WritingStyleCard(currentStyle: settings.writingStyle),
                     const SizedBox(height: 28),
 
                     // ── 앱 정보 섹션 ─────────────────────────────────
@@ -242,6 +249,81 @@ class _ToggleItem extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── 문체 선택 카드 ────────────────────────────────────────────────────────────
+
+class _WritingStyleCard extends ConsumerWidget {
+  const _WritingStyleCard({required this.currentStyle});
+
+  final WritingStyle currentStyle;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.onSurface.withValues(alpha: 0.05),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const _IconContainer(icon: Icons.edit_note_rounded),
+              const SizedBox(width: 16),
+              Text(
+                '일기 보정 문체',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onSurface,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SegmentedButton<WritingStyle>(
+            segments: const [
+              ButtonSegment(value: WritingStyle.diary,  label: Text('일기체')),
+              ButtonSegment(value: WritingStyle.memo,   label: Text('메모체')),
+              ButtonSegment(value: WritingStyle.letter, label: Text('편지체')),
+            ],
+            selected: {currentStyle},
+            onSelectionChanged: (value) => ref
+                .read(settingsNotifierProvider.notifier)
+                .setWritingStyle(value.first),
+            style: ButtonStyle(
+              side: WidgetStatePropertyAll(
+                BorderSide(color: scheme.outline.withValues(alpha: 0.3)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _styleDescription(currentStyle),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _styleDescription(WritingStyle style) => switch (style) {
+    WritingStyle.diary  => '자연스러운 1인칭 독백으로 정리합니다',
+    WritingStyle.memo   => '핵심 내용만 간결하게 요약합니다',
+    WritingStyle.letter => '따뜻하고 감성적인 표현으로 다듬습니다',
+  };
 }
 
 // ── 정보 아이템 (탭 불가) ─────────────────────────────────────────────────────

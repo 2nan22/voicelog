@@ -9,4 +9,8 @@ part 'app_settings_document.g.dart';
 class AppSettingsDocument {
   Id id = 0;
   bool isDarkMode = false;
+
+  /// WritingStyle enum index 값으로 저장 (0=diary, 1=memo, 2=letter).
+  @Index()
+  int writingStyleIndex = 0;
 }

@@ -1,3 +1,5 @@
+import 'package:voicelog_ai/features/settings/domain/app_settings.dart';
+
 // ── LLM 추론 설정 ─────────────────────────────────────────────────────────────
 /// CPU 백엔드(LiteRT)에서 Qwen2.5 1.5B 추론은 수 분 소요될 수 있다.
 /// 경고 다이얼로그는 추론이 이 시간을 초과할 때만 표시한다.
@@ -13,11 +15,19 @@ const String kModelDownloadUrl =
 const String kModelFileName = 'Qwen2.5-1.5B-Instruct_q8.task';
 const String kModelSubDir = 'models';
 
+// ── 문체별 프롬프트 지시문 ────────────────────────────────────────────────────
+/// 문체별 보정 지시문. kDiaryProcessingPrompt의 {style_instruction} 자리에 치환.
+const Map<WritingStyle, String> kWritingStyleInstructions = {
+  WritingStyle.diary:  '자연스러운 1인칭 독백 일기체로',
+  WritingStyle.memo:   '핵심만 간결하게 메모체로',
+  WritingStyle.letter: '따뜻하고 감성적인 편지체로',
+};
+
 /// 일기 보정 및 감정/태그 추출 프롬프트 (Qwen2.5 채팅 포맷).
-/// {raw_text} 자리에 STT 원문을 치환하여 사용한다.
+/// {style_instruction} 자리에 문체 지시문을, {raw_text} 자리에 STT 원문을 치환하여 사용한다.
 const String kDiaryProcessingPrompt = '''
 <|im_start|>user
-당신은 일기 정리 비서입니다. 아래 텍스트를 자연스러운 독백체로 수정하고,
+당신은 일기 정리 비서입니다. 아래 텍스트를 {style_instruction} 수정하고,
 감정(기쁨/슬픔/평온/화남)과 키워드 3개를 추출하세요.
 응답 형식:
 [보정본] 내용...

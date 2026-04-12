@@ -46,7 +46,7 @@ final llmWarmUpProvider = FutureProvider<void>.internal(
 );
 
 typedef LlmWarmUpRef = FutureProviderRef<void>;
-String _$llmStreamHash() => r'd99bf841594ed5f30009c49daa17d93682b5caab';
+String _$llmStreamHash() => r'00747315828217412d9660e39e2d86bad393c1fb';
 
 /// Copied from Dart SDK
 class _SystemHash {
