@@ -118,8 +118,10 @@ class MediaPipeLlmInferenceService implements ILlmInferenceService {
 
   @override
   void dispose() {
-    // mediapipe_genai 0.0.1 에서 LlmInferenceEngine 명시적 close() 미확인.
-    // 엔진 참조를 null로 해제하여 GC 처리. API 업데이트 시 close() 호출 추가 검토.
+    // _engine.dispose()는 내부 _endResponse()를 호출하여 _responseController를 null로 리셋한다.
+    // 이를 호출하지 않으면 스트림 중도 취소 후 재호출 시 assertion 에러 발생:
+    //   'Should not call generateResponse while previous controller is still active.'
+    _engine?.dispose();
     _engine = null;
     _isReady = false;
     AppLogger.info('LLM 세션 해제 완료');

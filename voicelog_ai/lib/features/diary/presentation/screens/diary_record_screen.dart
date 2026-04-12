@@ -7,11 +7,12 @@ import 'package:go_router/go_router.dart';
 
 import 'package:voicelog_ai/core/constants/dimensions.dart';
 import 'package:voicelog_ai/core/constants/prompts.dart';
+import 'package:voicelog_ai/core/constants/routes.dart';
 import 'package:voicelog_ai/core/constants/strings.dart';
 import 'package:voicelog_ai/core/utils/logger.dart';
+import 'package:voicelog_ai/features/diary/application/diary_list_provider.dart';
 import 'package:voicelog_ai/features/diary/application/diary_process_provider.dart';
 import 'package:voicelog_ai/features/diary/application/diary_record_provider.dart';
-import 'package:voicelog_ai/features/diary/application/diary_repository_provider.dart';
 import 'package:voicelog_ai/features/diary/application/llm_provider.dart';
 import 'package:voicelog_ai/features/diary/domain/diary_entry.dart';
 import 'package:voicelog_ai/features/diary/presentation/widgets/diary_result_widget.dart';
@@ -90,9 +91,16 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     final service = ref.read(llmInferenceServiceProvider);
     final processNotifier = ref.read(diaryProcessNotifierProvider.notifier);
 
+    // _onDelete 후 dispose() 상태이거나 최초 초기화 미완료 시 재초기화한다.
     if (!service.isReady) {
-      ref.read(diaryRecordNotifierProvider.notifier).setError();
-      return;
+      try {
+        await service.initialize();
+      } catch (e) {
+        if (!mounted) return;
+        AppLogger.error('LLM 재초기화 실패', e);
+        ref.read(diaryRecordNotifierProvider.notifier).setError();
+        return;
+      }
     }
 
     try {
@@ -119,6 +127,12 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
 
   void _onDelete() {
     _inferenceTimer?.cancel();
+    // processing 중 취소 시 엔진의 _responseController를 즉시 해제한다.
+    // dispose() 없이 반환만 하면 mediapipe_genai 내부 컨트롤러가 남아 있어
+    // 다음 generateResponse() 호출 시 assertion 에러가 발생한다.
+    if (ref.read(diaryRecordNotifierProvider) == RecordingState.processing) {
+      ref.read(llmInferenceServiceProvider).dispose();
+    }
     try {
       ref.read(speechToTextServiceProvider).cancelListening();
     } catch (_) {}
@@ -143,13 +157,16 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     );
 
     try {
-      final repository = await ref.read(diaryRepositoryProvider.future);
-      await repository.save(entry);
+      await ref.read(diaryListNotifierProvider.notifier).addEntry(entry);
       if (!mounted) return;
+
+      // LLM 세션 즉시 해제 (발열·메모리 관리)
+      ref.read(llmInferenceServiceProvider).dispose();
+
       ref.read(diaryRecordNotifierProvider.notifier).reset();
       ref.read(sttTextNotifierProvider.notifier).clear();
       ref.read(diaryProcessNotifierProvider.notifier).reset();
-      context.pop();
+      context.go(AppRoutes.diaryList);
     } catch (e) {
       AppLogger.error('일기 저장 실패', e);
       if (!mounted) return;
