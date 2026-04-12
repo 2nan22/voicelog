@@ -398,7 +398,7 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
 
   String _subtitleText(RecordingState state) => switch (state) {
     RecordingState.idle       => '마이크 버튼을 눌러 시작하세요',
-    RecordingState.recording  => '자연스럽게 말씀해 주세요',
+    RecordingState.recording  => '자연스럽게 말씀해 주세요. AI가 경청하고 있습니다.',
     RecordingState.processing => '잠시만 기다려 주세요',
     RecordingState.done       => '일기를 저장하거나 다시 녹음할 수 있어요',
     RecordingState.error      => '다시 시도해 보세요',
@@ -585,6 +585,9 @@ class _GlassSttContainer extends ConsumerWidget {
     final parsedResult = isLlmPhase
         ? ref.watch(diaryProcessNotifierProvider.select((s) => s.parsedResult))
         : null;
+    final rawAccumulated = isLlmPhase
+        ? ref.watch(diaryProcessNotifierProvider.select((s) => s.rawAccumulated))
+        : '';
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(40),
@@ -603,7 +606,7 @@ class _GlassSttContainer extends ConsumerWidget {
             ),
           ),
           child: isLlmPhase
-              ? _buildLlmContent(context, parsedResult)
+              ? _buildLlmContent(context, parsedResult, rawAccumulated)
               : _buildSttContent(context),
         ),
       ),
@@ -637,11 +640,12 @@ class _GlassSttContainer extends ConsumerWidget {
         Expanded(
           child: Text(
             sttText,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
               height: 1.6,
               color: AppColors.onSurface,
+              letterSpacing: -0.3,
             ),
           ),
         ),
@@ -651,8 +655,29 @@ class _GlassSttContainer extends ConsumerWidget {
     );
   }
 
-  Widget _buildLlmContent(BuildContext context, dynamic parsedResult) {
+  Widget _buildLlmContent(BuildContext context, dynamic parsedResult, String rawAccumulated) {
     final scheme = Theme.of(context).colorScheme;
+
+    // processing + 스트리밍 텍스트 없음 → 스피너 + 메시지
+    if (rawAccumulated.isEmpty) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            color: scheme.primary,
+            strokeWidth: 2.5,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '생각을 정리하고 있어요...',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -880,7 +905,7 @@ class _ControlsRow extends StatelessWidget {
   Widget _buildRightButton(BuildContext context) => switch (recordingState) {
     RecordingState.idle || RecordingState.error => const SizedBox(width: 64, height: 64),
     RecordingState.recording => _RoundButton(
-        icon: Icons.check_rounded,
+        icon: Icons.stop_rounded,
         tooltip: AppStrings.btnFinishRecording,
         onTap: onFinishRecording,
         isFilled: true,
