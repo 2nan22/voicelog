@@ -7,11 +7,11 @@ part of 'llm_provider.dart';
 // **************************************************************************
 
 String _$llmInferenceServiceHash() =>
-    r'2dd442817fb88daa809731edf3d1a162dd161b2e';
+    r'4b8c9ddbc8090b1949f334a2c7b5dea71a185e20';
 
 /// LLM 서비스 싱글톤 Provider (앱 생명주기 동안 유지).
 ///
-/// [MediaPipeLlmInferenceService]를 [ILlmInferenceService]로 제공한다.
+/// [MethodChannelLlmInferenceService]를 [ILlmInferenceService]로 제공한다.
 /// [ref.onDispose]에서 자동으로 [ILlmInferenceService.dispose]를 호출한다.
 ///
 /// Copied from [llmInferenceService].
