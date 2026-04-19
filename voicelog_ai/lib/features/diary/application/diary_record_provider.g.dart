@@ -83,5 +83,25 @@ final amplitudesNotifierProvider =
 );
 
 typedef _$AmplitudesNotifier = AutoDisposeNotifier<List<double>>;
+String _$sttCallbackHandlerHash() =>
+    r'a232e5f4cafe5679b38beca0e39909c17e5924c7';
+
+/// STT 콜백을 처리하는 Application 레이어 핸들러.
+/// _MicButtonState와 무관하게 Provider에서 직접 상태를 전환한다.
+///
+/// Copied from [SttCallbackHandler].
+@ProviderFor(SttCallbackHandler)
+final sttCallbackHandlerProvider =
+    NotifierProvider<SttCallbackHandler, void>.internal(
+  SttCallbackHandler.new,
+  name: r'sttCallbackHandlerProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$sttCallbackHandlerHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$SttCallbackHandler = Notifier<void>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

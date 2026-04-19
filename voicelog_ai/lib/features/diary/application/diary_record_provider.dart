@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:voicelog_ai/core/utils/logger.dart';
 import 'package:voicelog_ai/features/diary/infrastructure/speech_to_text_service.dart';
 
 part 'diary_record_provider.g.dart';
@@ -54,4 +55,89 @@ class AmplitudesNotifier extends _$AmplitudesNotifier {
   }
 
   void clear() => state = const [];
+}
+
+/// STT 콜백을 처리하는 Application 레이어 핸들러.
+/// _MicButtonState와 무관하게 Provider에서 직접 상태를 전환한다.
+@Riverpod(keepAlive: true)
+class SttCallbackHandler extends _$SttCallbackHandler {
+  bool _isAutoRestarting = false;
+  bool _isCancelled = false;
+
+  @override
+  void build() {}
+
+  /// STT 세션을 시작하고 콜백을 자신에게 바인딩한다.
+  Future<void> startSession() async {
+    _isAutoRestarting = false;
+    _isCancelled = false;
+
+    final sttService = ref.read(speechToTextServiceProvider);
+    await sttService.startListening(
+      onResult: _onResult,
+      onAmplitude: _onAmplitude,
+      onError: _onError,
+      onStatus: _onStatus,
+    );
+  }
+
+  /// 세션을 명시적으로 취소한다 (자동 재시작 방지).
+  void cancelSession() {
+    _isCancelled = true;
+    _isAutoRestarting = false;
+  }
+
+  void _onResult(String text, bool isFinal) {
+    if (_isCancelled) return;
+    final sttNotifier = ref.read(sttTextNotifierProvider.notifier);
+    final notifier = ref.read(diaryRecordNotifierProvider.notifier);
+
+    if (text.isNotEmpty) {
+      sttNotifier.update(text);
+    }
+    if (isFinal && text.isNotEmpty) {
+      notifier.startProcessing();
+    }
+  }
+
+  void _onAmplitude(double amp) {
+    if (_isCancelled) return;
+    ref.read(amplitudesNotifierProvider.notifier).add(amp);
+  }
+
+  void _onError(String errorMsg, bool permanent) {
+    if (!permanent) return;
+    if (_isCancelled) return;
+
+    final notifier = ref.read(diaryRecordNotifierProvider.notifier);
+    final currentText = ref.read(sttTextNotifierProvider);
+    if (currentText.isNotEmpty) {
+      notifier.startProcessing();
+    } else {
+      notifier.setError();
+    }
+  }
+
+  Future<void> _onStatus(String status) async {
+    AppLogger.info('SttCallbackHandler onStatus: $status');
+    if (status != 'done') return;
+    if (_isCancelled) return;
+
+    final currentState = ref.read(diaryRecordNotifierProvider);
+    if (currentState != RecordingState.recording) return;
+
+    final currentText = ref.read(sttTextNotifierProvider);
+    if (currentText.isNotEmpty) {
+      ref.read(diaryRecordNotifierProvider.notifier).startProcessing();
+    } else if (!_isAutoRestarting) {
+      _isAutoRestarting = true;
+      AppLogger.info('STT done (결과 없음) → 자동 재시작');
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      if (_isCancelled) return;
+      if (ref.read(diaryRecordNotifierProvider) == RecordingState.recording) {
+        _isAutoRestarting = false;
+        await startSession();
+      }
+    }
+  }
 }
