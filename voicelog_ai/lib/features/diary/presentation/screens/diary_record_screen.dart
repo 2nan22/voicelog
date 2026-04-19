@@ -131,6 +131,7 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
 
   void _onDelete() {
     _inferenceTimer?.cancel();
+    ref.read(sttCallbackHandlerProvider.notifier).cancelSession();
     if (ref.read(diaryRecordNotifierProvider) == RecordingState.processing) {
       ref.read(llmInferenceServiceProvider).dispose();
     }
@@ -152,6 +153,7 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
   Future<void> _finishRecordingAsync() async {
     final sttService = ref.read(speechToTextServiceProvider);
     final notifier = ref.read(diaryRecordNotifierProvider.notifier);
+    ref.read(sttCallbackHandlerProvider.notifier).cancelSession();
     try {
       await sttService.stopListening();
       notifier.startProcessing();

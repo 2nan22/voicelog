@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:voicelog_ai/core/utils/logger.dart';
 import 'package:voicelog_ai/features/diary/application/diary_record_provider.dart';
 
 /// 녹음 시작/중지 마이크 버튼 — Stitch v0.0.2 스타일.
@@ -23,10 +22,6 @@ class _MicButtonState extends ConsumerState<MicButton>
   late AnimationController _ring1;
   late AnimationController _ring2;
   Timer? _ring2Delay;
-
-  /// STT 'done' 상태 수신 후 자동 재시작이 진행 중임을 나타내는 플래그.
-  /// 중복 재시작 방지를 위해 사용한다.
-  bool _isAutoRestarting = false;
 
   @override
   void initState() {
@@ -66,80 +61,11 @@ class _MicButtonState extends ConsumerState<MicButton>
       ..reset();
   }
 
-  /// STT 세션을 시작한다. recording 상태에서 'done' 발생 시 자동 재호출된다.
-  Future<void> _beginListening() async {
-    if (!mounted) return;
-    _isAutoRestarting = false;
-
-    final sttService = ref.read(speechToTextServiceProvider);
-    final notifier = ref.read(diaryRecordNotifierProvider.notifier);
-    final sttNotifier = ref.read(sttTextNotifierProvider.notifier);
-    final amplitudesNotifier = ref.read(amplitudesNotifierProvider.notifier);
-
-    await sttService.startListening(
-      onResult: (text, isFinal) {
-        if (!mounted) return;
-        // 빈 문자열로 기존 인식 결과를 덮어쓰지 않는다.
-        if (text.isNotEmpty) {
-          sttNotifier.update(text);
-        }
-        // final 결과에 텍스트가 있을 때만 처리 단계로 전환.
-        // 빈 final 결과는 무시하고 'done' 핸들러에 위임한다.
-        if (isFinal && text.isNotEmpty) {
-          notifier.startProcessing();
-          _stopPulse();
-        }
-      },
-      onAmplitude: (amp) {
-        if (!mounted) return;
-        amplitudesNotifier.add(amp);
-      },
-      onError: (errorMsg, permanent) {
-        if (!permanent) return;
-        if (!mounted) return;
-        // permanent 오류 = STT 세션 완전 종료
-        // 인식된 텍스트가 있으면 LLM 처리로, 없으면 에러 상태로 전환
-        final currentText = ref.read(sttTextNotifierProvider);
-        if (currentText.isNotEmpty) {
-          notifier.startProcessing();
-        } else {
-          notifier.setError();
-        }
-        _stopPulse();
-      },
-      onStatus: (status) async {
-        AppLogger.info('onStatus 핸들러 진입: $status, mounted=$mounted');
-        if (!mounted) return;
-        if (status != 'done') return;
-
-        final currentState = ref.read(diaryRecordNotifierProvider);
-        AppLogger.info('onStatus done: state=$currentState');
-        // recording 상태가 아니면 (이미 processing/done/error) 아무것도 하지 않는다.
-        if (currentState != RecordingState.recording) return;
-
-        final currentText = ref.read(sttTextNotifierProvider);
-        if (currentText.isNotEmpty) {
-          // 부분 인식 결과가 있으면 처리 단계로 전환
-          notifier.startProcessing();
-          _stopPulse();
-        } else if (!_isAutoRestarting) {
-          // 인식 결과 없음 → STT 세션 자동 재시작
-          _isAutoRestarting = true;
-          AppLogger.info('STT done (결과 없음) → 자동 재시작');
-          await Future<void>.delayed(const Duration(milliseconds: 300));
-          if (!mounted) return;
-          if (ref.read(diaryRecordNotifierProvider) == RecordingState.recording) {
-            await _beginListening();
-          }
-        }
-      },
-    );
-  }
-
   Future<void> _onTap() async {
     final state = ref.read(diaryRecordNotifierProvider);
     final sttService = ref.read(speechToTextServiceProvider);
     final notifier = ref.read(diaryRecordNotifierProvider.notifier);
+    final handler = ref.read(sttCallbackHandlerProvider.notifier);
 
     try {
       if (state == RecordingState.idle) {
@@ -147,14 +73,11 @@ class _MicButtonState extends ConsumerState<MicButton>
         if (!mounted) return;
         if (!granted) return;
 
-        // recording 상태를 먼저 설정한 뒤 STT를 시작해야 한다.
-        // STT 콜백(onResult/onStatus)은 _beginListening()의 await 중에 발생할 수 있는데,
-        // startRecording()을 나중에 호출하면 이미 processing으로 전환된 상태를
-        // recording으로 되돌려 LLM 흐름이 끊긴다.
         notifier.startRecording();
         _startPulse();
-        await _beginListening();
+        await handler.startSession();
       } else if (state == RecordingState.recording) {
+        handler.cancelSession();
         await sttService.stopListening();
         notifier.startProcessing();
         _stopPulse();
