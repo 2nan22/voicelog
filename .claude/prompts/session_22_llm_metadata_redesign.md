@@ -1,5 +1,33 @@
 # Session 22 — LLM 메타데이터 추출 재설계 + 저장 버그 수정
 
+## 진행 현황 (session 22 종료 기준)
+
+브랜치: `feat/init-20260411`
+
+| 꼭지 | 내용 | 상태 | 커밋 |
+|------|------|------|------|
+| 꼭지 1 | 도메인 모델 확장 | ✅ 완료 | `00a2865` |
+| 꼭지 2 | 프롬프트 & 파서 개편 | ✅ 완료 | `1f5ffc9` |
+| 꼭지 3 | DiaryProcessProvider 2-phase + 저장 버그 수정 | ✅ 완료 | `cf7c64f` |
+| 꼭지 4 | RecordScreen UI 개편 + 설정 화면 보정 토글 | ✅ 완료 | `b5ac68e` |
+| 꼭지 5 | DetailScreen AI 재분석·보정 기능 | 🔲 미완료 | — |
+
+### 다음 세션 시작점
+
+꼭지 5부터 이어서 진행한다. 파일 경로는 하단 "관련 파일 경로" 표 참고.
+
+추가로 수정된 파일 (꼭지 명세에 없었으나 이번 세션에서 함께 수정됨):
+- `lib/features/diary/presentation/widgets/diary_card.dart` — `_title` → `entry.title` 사용, `correctedText` nullable 대응
+- `lib/features/diary/presentation/widgets/diary_result_widget.dart` — `parsedResult` → `metadataResult`
+- `lib/features/diary/presentation/widgets/streaming_text_widget.dart` — `correctedText` nullable 대응
+- `lib/features/diary/presentation/screens/diary_detail_screen.dart` — `correctedText ?? rawText` 대응
+- `lib/features/diary/presentation/screens/logs_screen.dart` — 동일
+- `lib/features/diary/application/profile_provider.dart` — 단어 수 집계 nullable 대응
+- `lib/features/settings/application/settings_provider.dart` — `correctionEnabled` 읽기/저장 추가
+- `lib/features/diary/application/llm_provider.dart` — 사용 안 하는 `llmStream` Provider 제거
+
+---
+
 ## 현재 상태 (session 21 종료 기준)
 
 브랜치: `feat/init-20260411`

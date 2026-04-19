@@ -34,6 +34,7 @@
 | Session 20 | `session_20_stt_debug.md` | STT 근본 원인 디버깅 (record·audioplayers 제거, dictation 모드) |
 | Session 21 | `session_21_stt_provider_refactor.md` | STT 콜백 Application 레이어 이동 (mounted=false 이슈 근본 수정) |
 | Session 22 | `session_22_llm_metadata_redesign.md` | LLM 메타데이터 추출 재설계, 저장 버그 수정, 보정 옵션, 상세 재처리 |
+| Session 23 | `session_23_stt_stop_ui_bugfix.md` | STT 수동 종료 + 무음 15초 자동 종료, 헤딩/배지 LlmPhase 분기, 저장 버튼 버그 수정 |
 
 ---
 

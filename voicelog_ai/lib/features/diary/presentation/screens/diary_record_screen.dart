@@ -224,6 +224,9 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     final correctionEnabled = ref.watch(
       settingsNotifierProvider.select((s) => s.valueOrNull?.correctionEnabled ?? false),
     );
+    final llmPhase = ref.watch(
+      diaryProcessNotifierProvider.select((s) => s.phase),
+    );
     final topPadding = MediaQuery.of(context).padding.top;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final scheme = Theme.of(context).colorScheme;
@@ -275,11 +278,11 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
                     children: [
                       const Flexible(child: SizedBox()),
                       // 상태 배지
-                      _RecordingStateBadge(state: recordingState),
+                      _RecordingStateBadge(state: recordingState, llmPhase: llmPhase),
                       const SizedBox(height: 12),
                       // 상태별 대형 헤딩
                       Text(
-                        _headingText(recordingState),
+                        _headingText(recordingState, llmPhase, correctionEnabled),
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: AppColors.onSurface,
@@ -289,7 +292,7 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
                       const SizedBox(height: 6),
                       // 서브 텍스트
                       Text(
-                        _subtitleText(recordingState),
+                        _subtitleText(recordingState, llmPhase),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -366,18 +369,25 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     );
   }
 
-  String _headingText(RecordingState state) => switch (state) {
-    RecordingState.idle       => '오늘의 목소리를\n담아보세요',
-    RecordingState.recording  => '생각을 기록하고\n있습니다',
-    RecordingState.processing => 'AI가\n다듬는 중입니다',
-    RecordingState.done       => '보정이\n완료되었습니다',
-    RecordingState.error      => '문제가\n발생했어요',
-  };
+  String _headingText(RecordingState state, LlmPhase llmPhase, bool correctionEnabled) =>
+      switch (state) {
+        RecordingState.idle      => '오늘의 목소리를\n담아보세요',
+        RecordingState.recording => '생각을 기록하고\n있습니다',
+        RecordingState.processing => llmPhase == LlmPhase.correction
+            ? 'AI가\n다듬는 중입니다'
+            : 'AI가\n분석 중입니다',
+        RecordingState.done => correctionEnabled
+            ? '보정이\n완료되었습니다'
+            : '분석이\n완료되었습니다',
+        RecordingState.error => '문제가\n발생했어요',
+      };
 
-  String _subtitleText(RecordingState state) => switch (state) {
+  String _subtitleText(RecordingState state, LlmPhase llmPhase) => switch (state) {
     RecordingState.idle       => '마이크 버튼을 눌러 시작하세요',
     RecordingState.recording  => '자연스럽게 말씀해 주세요. AI가 경청하고 있습니다.',
-    RecordingState.processing => '잠시만 기다려 주세요',
+    RecordingState.processing => llmPhase == LlmPhase.correction
+        ? '문장을 다듬고 있어요'
+        : 'AI가 내용을 분석하고 있어요',
     RecordingState.done       => '일기를 저장하거나 다시 녹음할 수 있어요',
     RecordingState.error      => '다시 시도해 보세요',
   };
@@ -495,9 +505,10 @@ class _GlassHeader extends StatelessWidget {
 // ─── 상태 배지 ────────────────────────────────────────────────────────────────
 
 class _RecordingStateBadge extends StatelessWidget {
-  const _RecordingStateBadge({required this.state});
+  const _RecordingStateBadge({required this.state, required this.llmPhase});
 
   final RecordingState state;
+  final LlmPhase llmPhase;
 
   @override
   Widget build(BuildContext context) {
@@ -509,8 +520,10 @@ class _RecordingStateBadge extends StatelessWidget {
 
     final (Color bg, Color fg, IconData icon, String label) = switch (state) {
       RecordingState.recording  => (scheme.errorContainer, scheme.error, Icons.fiber_manual_record, '실시간 녹음 중'),
-      RecordingState.processing => (scheme.primaryContainer, scheme.primary, Icons.auto_awesome_rounded, 'AI 처리 중'),
-      RecordingState.done       => (scheme.secondaryContainer, scheme.secondary, Icons.check_circle_rounded, '보정 완료'),
+      RecordingState.processing => llmPhase == LlmPhase.correction
+          ? (scheme.primaryContainer, scheme.primary, Icons.auto_awesome_rounded, 'AI 보정 중')
+          : (scheme.primaryContainer, scheme.primary, Icons.auto_awesome_rounded, 'AI 분석 중'),
+      RecordingState.done       => (scheme.secondaryContainer, scheme.secondary, Icons.check_circle_rounded, '완료'),
       _                         => (scheme.primaryContainer, scheme.primary, Icons.info_outline_rounded, ''),
     };
 
@@ -1014,11 +1027,7 @@ class _ControlsRow extends StatelessWidget {
         onTap: onFinishRecording,
         isFilled: true,
       ),
-    RecordingState.processing => const _RoundButton(
-        icon: Icons.check_rounded,
-        tooltip: AppStrings.btnSave,
-        isFilled: true,
-      ),
+    RecordingState.processing => const SizedBox(width: 64, height: 64),
     // 보정 활성화 + done: 본문 버튼으로 저장하므로 우측 버튼 비활성화
     RecordingState.done => correctionEnabled
         ? const SizedBox(width: 64, height: 64)

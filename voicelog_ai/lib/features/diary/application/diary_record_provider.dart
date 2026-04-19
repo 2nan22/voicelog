@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:voicelog_ai/core/utils/logger.dart';
 import 'package:voicelog_ai/features/diary/infrastructure/speech_to_text_service.dart';
@@ -63,6 +65,9 @@ class AmplitudesNotifier extends _$AmplitudesNotifier {
 class SttCallbackHandler extends _$SttCallbackHandler {
   bool _isAutoRestarting = false;
   bool _isCancelled = false;
+  Timer? _silenceTimer;
+  static const _silenceThreshold = 0.05;
+  static const _silenceDuration = Duration(seconds: 15);
 
   @override
   void build() {}
@@ -71,6 +76,7 @@ class SttCallbackHandler extends _$SttCallbackHandler {
   Future<void> startSession() async {
     _isAutoRestarting = false;
     _isCancelled = false;
+    _resetSilenceTimer();
 
     final sttService = ref.read(speechToTextServiceProvider);
     await sttService.startListening(
@@ -85,24 +91,42 @@ class SttCallbackHandler extends _$SttCallbackHandler {
   void cancelSession() {
     _isCancelled = true;
     _isAutoRestarting = false;
+    _silenceTimer?.cancel();
+    _silenceTimer = null;
+  }
+
+  void _resetSilenceTimer() {
+    _silenceTimer?.cancel();
+    _silenceTimer = Timer(_silenceDuration, _onSilenceTimeout);
+  }
+
+  void _onSilenceTimeout() {
+    if (_isCancelled) return;
+    final currentState = ref.read(diaryRecordNotifierProvider);
+    if (currentState != RecordingState.recording) return;
+
+    final currentText = ref.read(sttTextNotifierProvider);
+    if (currentText.isNotEmpty) {
+      AppLogger.info('무음 ${_silenceDuration.inSeconds}초 초과 → 자동 종료');
+      ref.read(diaryRecordNotifierProvider.notifier).startProcessing();
+    } else {
+      _resetSilenceTimer();
+    }
   }
 
   void _onResult(String text, bool isFinal) {
     if (_isCancelled) return;
-    final sttNotifier = ref.read(sttTextNotifierProvider.notifier);
-    final notifier = ref.read(diaryRecordNotifierProvider.notifier);
-
     if (text.isNotEmpty) {
-      sttNotifier.update(text);
-    }
-    if (isFinal && text.isNotEmpty) {
-      notifier.startProcessing();
+      ref.read(sttTextNotifierProvider.notifier).update(text);
     }
   }
 
   void _onAmplitude(double amp) {
     if (_isCancelled) return;
     ref.read(amplitudesNotifierProvider.notifier).add(amp);
+    if (amp > _silenceThreshold) {
+      _resetSilenceTimer();
+    }
   }
 
   void _onError(String errorMsg, bool permanent) {
@@ -126,12 +150,9 @@ class SttCallbackHandler extends _$SttCallbackHandler {
     final currentState = ref.read(diaryRecordNotifierProvider);
     if (currentState != RecordingState.recording) return;
 
-    final currentText = ref.read(sttTextNotifierProvider);
-    if (currentText.isNotEmpty) {
-      ref.read(diaryRecordNotifierProvider.notifier).startProcessing();
-    } else if (!_isAutoRestarting) {
+    if (!_isAutoRestarting) {
       _isAutoRestarting = true;
-      AppLogger.info('STT done (결과 없음) → 자동 재시작');
+      AppLogger.info('STT done → 재시작');
       await Future<void>.delayed(const Duration(milliseconds: 300));
       if (_isCancelled) return;
       if (ref.read(diaryRecordNotifierProvider) == RecordingState.recording) {
