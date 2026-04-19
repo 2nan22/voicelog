@@ -29,9 +29,9 @@ class StreamingTextWidget extends ConsumerWidget {
       return const LoadingShimmer(height: 80, borderRadius: AppDimensions.borderRadius);
     }
 
-    // 보정본이 파싱되었으면 correctedText 우선 사용, 아니면 [보정본] 섹션 추출
-    final displayText = processState.parsedResult?.correctedText.isNotEmpty == true
-        ? processState.parsedResult!.correctedText
+    // 보정 완료 시 correctedText 우선 사용, 아니면 rawAccumulated에서 [보정본] 추출
+    final displayText = processState.correctedText?.isNotEmpty == true
+        ? processState.correctedText!
         : _extractCorrectedText(processState.rawAccumulated);
 
     if (displayText.isEmpty) return const SizedBox.shrink();

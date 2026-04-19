@@ -14,7 +14,7 @@ class DiaryResultWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final result = ref.watch(
-      diaryProcessNotifierProvider.select((s) => s.parsedResult),
+      diaryProcessNotifierProvider.select((s) => s.metadataResult),
     );
     if (result == null) return const SizedBox.shrink();
 

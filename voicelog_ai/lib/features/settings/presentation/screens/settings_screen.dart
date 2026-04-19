@@ -51,9 +51,23 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 28),
 
-                    // ── AI 문체 섹션 ──────────────────────────────────
-                    const _SectionHeader(title: 'AI 문체'),
+                    // ── AI 기능 섹션 ──────────────────────────────────
+                    const _SectionHeader(title: 'AI 기능'),
                     const SizedBox(height: 10),
+                    _SettingsCard(
+                      children: [
+                        _ToggleItem(
+                          icon: Icons.auto_fix_high_rounded,
+                          label: '문맥 보정',
+                          subtitle: 'AI가 오탈자와 어색한 표현을 최소한으로 수정합니다',
+                          value: settings.correctionEnabled,
+                          onChanged: (v) => ref
+                              .read(settingsNotifierProvider.notifier)
+                              .setCorrectionEnabled(v),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     _WritingStyleCard(currentStyle: settings.writingStyle),
                     const SizedBox(height: 28),
 
@@ -215,12 +229,14 @@ class _ToggleItem extends StatelessWidget {
     required this.label,
     required this.value,
     required this.onChanged,
+    this.subtitle,
   });
 
   final IconData icon;
   final String label;
   final bool value;
   final ValueChanged<bool> onChanged;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -232,12 +248,26 @@ class _ToggleItem extends StatelessWidget {
           _IconContainer(icon: icon),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: scheme.onSurface,
+                      ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
                   ),
+                ],
+              ],
             ),
           ),
           Switch(

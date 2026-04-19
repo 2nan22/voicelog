@@ -5,19 +5,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:voicelog_ai/core/constants/dimensions.dart';
 import 'package:voicelog_ai/core/constants/prompts.dart';
 import 'package:voicelog_ai/core/constants/routes.dart';
 import 'package:voicelog_ai/core/constants/strings.dart';
 import 'package:voicelog_ai/core/theme/app_colors.dart';
 import 'package:voicelog_ai/core/utils/logger.dart';
+import 'package:voicelog_ai/core/utils/llm_response_parser.dart';
+import 'package:voicelog_ai/core/widgets/emotion_chip.dart';
 import 'package:voicelog_ai/features/diary/application/diary_list_provider.dart';
 import 'package:voicelog_ai/features/diary/application/diary_process_provider.dart';
 import 'package:voicelog_ai/features/diary/application/diary_record_provider.dart';
 import 'package:voicelog_ai/features/diary/application/llm_provider.dart';
 import 'package:voicelog_ai/features/diary/domain/diary_entry.dart';
-import 'package:voicelog_ai/features/diary/presentation/widgets/diary_result_widget.dart';
 import 'package:voicelog_ai/features/diary/presentation/widgets/mic_button.dart';
-import 'package:voicelog_ai/features/diary/presentation/widgets/streaming_text_widget.dart';
 import 'package:voicelog_ai/features/diary/presentation/widgets/waveform_widget.dart';
 import 'package:voicelog_ai/features/settings/application/settings_provider.dart';
 import 'package:voicelog_ai/features/settings/domain/app_settings.dart';
@@ -220,6 +221,9 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     final recordingState = ref.watch(diaryRecordNotifierProvider);
     final sttText = ref.watch(sttTextNotifierProvider);
     final amplitudes = ref.watch(amplitudesNotifierProvider);
+    final correctionEnabled = ref.watch(
+      settingsNotifierProvider.select((s) => s.valueOrNull?.correctionEnabled ?? false),
+    );
     final topPadding = MediaQuery.of(context).padding.top;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final scheme = Theme.of(context).colorScheme;
@@ -297,6 +301,8 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
                       _GlassSttContainer(
                         sttText: sttText,
                         recordingState: recordingState,
+                        onSaveOriginal: () => _onSave(),
+                        onSaveCorrected: () => _onSave(useCorrection: true),
                       ),
                       const SizedBox(height: 16),
                       // AI 처리 중 배지 — Visibility로 감싸야 Center(_ControlsRow)의
@@ -331,6 +337,7 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
                           onFinishRecording: _onFinishRecording,
                           onSave: _onSave,
                           onPlayback: null,
+                          correctionEnabled: correctionEnabled,
                         ),
                       ),
                       SizedBox(height: bottomPadding + 24),
@@ -351,6 +358,7 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
               topPadding: topPadding,
               onClose: () => context.pop(),
               onSave: _onSave,
+              correctionEnabled: correctionEnabled,
             ),
           ),
         ],
@@ -427,6 +435,7 @@ class _GlassHeader extends StatelessWidget {
     required this.topPadding,
     required this.onClose,
     required this.onSave,
+    required this.correctionEnabled,
   });
 
   final RecordingState recordingState;
@@ -434,20 +443,19 @@ class _GlassHeader extends StatelessWidget {
   final double topPadding;
   final VoidCallback onClose;
   final Future<void> Function() onSave;
+  final bool correctionEnabled;
 
   @override
   Widget build(BuildContext context) {
+    // 보정 활성화 + done: 저장 버튼 숨기고 본문의 2개 버튼으로 대체
+    final showSave = recordingState == RecordingState.done && !correctionEnabled;
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           height: topPadding + 64,
           color: Colors.white.withValues(alpha: 0.8),
-          padding: EdgeInsets.only(
-            top: topPadding,
-            left: 8,
-            right: 8,
-          ),
+          padding: EdgeInsets.only(top: topPadding, left: 8, right: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -466,15 +474,12 @@ class _GlassHeader extends StatelessWidget {
                   color: scheme.primary,
                 ),
               ),
-              if (recordingState == RecordingState.done)
+              if (showSave)
                 TextButton(
                   onPressed: onSave,
                   child: Text(
                     AppStrings.saveDiary,
-                    style: TextStyle(
-                      color: scheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
                   ),
                 )
               else
@@ -537,16 +542,20 @@ class _RecordingStateBadge extends StatelessWidget {
 
 // ─── STT/LLM 통합 글래스모픽 컨테이너 ──────────────────────────────────────────
 
-/// idle/recording: sttText 표시 (블링킹 커서 포함)
-/// processing/done: LLM 스트리밍 텍스트 → 파싱 완료 후 DiaryResultWidget 표시
+/// idle/recording: STT 원본 텍스트 표시
+/// processing/done: STT 원본 + 메타데이터 결과 카드 + (옵션) 보정 카드
 class _GlassSttContainer extends ConsumerWidget {
   const _GlassSttContainer({
     required this.sttText,
     required this.recordingState,
+    required this.onSaveOriginal,
+    required this.onSaveCorrected,
   });
 
   final String sttText;
   final RecordingState recordingState;
+  final Future<void> Function() onSaveOriginal;
+  final Future<void> Function() onSaveCorrected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -555,9 +564,15 @@ class _GlassSttContainer extends ConsumerWidget {
     final metadataResult = isLlmPhase
         ? ref.watch(diaryProcessNotifierProvider.select((s) => s.metadataResult))
         : null;
-    final rawAccumulated = isLlmPhase
-        ? ref.watch(diaryProcessNotifierProvider.select((s) => s.rawAccumulated))
-        : '';
+    final phase = isLlmPhase
+        ? ref.watch(diaryProcessNotifierProvider.select((s) => s.phase))
+        : LlmPhase.idle;
+    final correctedText = isLlmPhase
+        ? ref.watch(diaryProcessNotifierProvider.select((s) => s.correctedText))
+        : null;
+    final correctionEnabled = ref.watch(
+      settingsNotifierProvider.select((s) => s.valueOrNull?.correctionEnabled ?? false),
+    );
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(40),
@@ -576,7 +591,8 @@ class _GlassSttContainer extends ConsumerWidget {
             ),
           ),
           child: isLlmPhase
-              ? _buildLlmContent(context, metadataResult, rawAccumulated)
+              ? _buildLlmContent(
+                  context, metadataResult, phase, correctedText, correctionEnabled)
               : _buildSttContent(context),
         ),
       ),
@@ -626,58 +642,170 @@ class _GlassSttContainer extends ConsumerWidget {
     );
   }
 
-  Widget _buildLlmContent(BuildContext context, dynamic metadataResult, String rawAccumulated) {
+  Widget _buildLlmContent(
+    BuildContext context,
+    LlmMetadataResult? metadataResult,
+    LlmPhase phase,
+    String? correctedText,
+    bool correctionEnabled,
+  ) {
     final scheme = Theme.of(context).colorScheme;
 
-    // processing + 아직 스트리밍 시작 전 → 스피너 + 메시지
-    // done + rawAccumulated 없음 → LLM을 거치지 않은 상태 (STT 텍스트 없이 완료)
-    if (rawAccumulated.isEmpty) {
-      if (recordingState == RecordingState.processing) {
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(
-              color: scheme.primary,
-              strokeWidth: 2.5,
+    // 메타데이터 미완료 → 로딩 스피너
+    if (metadataResult == null) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(color: scheme.primary, strokeWidth: 2.5),
+          const SizedBox(height: 16),
+          Text(
+            'AI가 분석 중이에요...',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppColors.onSurfaceVariant,
             ),
-            const SizedBox(height: 16),
-            Text(
-              '생각을 정리하고 있어요...',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.onSurfaceVariant,
-              ),
-            ),
-          ],
-        );
-      }
-      // done 상태지만 LLM 결과 없음 → 빈 상태 표시
-      return const SizedBox.shrink();
+          ),
+        ],
+      );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // AI 보정 라벨
-        Text(
-          'AI 보정',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: scheme.primary,
-            letterSpacing: 1.5,
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // STT 원본 (compact)
+          if (sttText.isNotEmpty) ...[
+            Text(
+              sttText,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: AppColors.onSurface.withValues(alpha: 0.65),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Divider(height: 1, color: scheme.outlineVariant),
+            const SizedBox(height: 12),
+          ],
+          // AI 분석 결과 헤더
+          Row(
+            children: [
+              Icon(Icons.auto_awesome_rounded, size: 14, color: scheme.primary),
+              const SizedBox(width: 6),
+              Text(
+                'AI 분석 결과',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: scheme.primary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 12),
-        // 스트리밍 텍스트
-        const StreamingTextWidget(),
-        // 파싱 완료 후 감정·태그 뱃지
-        if (metadataResult != null) ...[
-          const SizedBox(height: 16),
-          Divider(height: 1, color: scheme.outlineVariant),
-          const SizedBox(height: 16),
-          const DiaryResultWidget(),
+          const SizedBox(height: 10),
+          // 제목
+          Text(
+            metadataResult.title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.onSurface,
+            ),
+          ),
+          const SizedBox(height: 10),
+          // 감정 칩
+          EmotionChip(emotion: metadataResult.emotion),
+          // 태그
+          if (metadataResult.tags.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: metadataResult.tags
+                  .map((tag) => _TagBadge(label: tag))
+                  .toList(),
+            ),
+          ],
+          // 인물 (있을 때만)
+          if (metadataResult.people.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _MetaRow(
+              icon: Icons.person_outline_rounded,
+              text: metadataResult.people.join(', '),
+            ),
+          ],
+          // 장소 (있을 때만)
+          if (metadataResult.places.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            _MetaRow(
+              icon: Icons.place_outlined,
+              text: metadataResult.places.join(', '),
+            ),
+          ],
+          // 보정 섹션 (설정 활성화 시)
+          if (correctionEnabled) ...[
+            const SizedBox(height: 12),
+            Divider(height: 1, color: scheme.outlineVariant),
+            const SizedBox(height: 12),
+            if (phase == LlmPhase.correction)
+              Row(
+                children: [
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      color: scheme.primary,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '보정 중...',
+                    style: TextStyle(fontSize: 12, color: scheme.primary),
+                  ),
+                ],
+              )
+            else if (correctedText != null && correctedText.isNotEmpty) ...[
+              Text(
+                '보정본',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: scheme.primary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                correctedText,
+                style: const TextStyle(fontSize: 15, height: 1.6, color: AppColors.onSurface),
+              ),
+            ],
+            // 저장 버튼 (done 상태)
+            if (phase == LlmPhase.done) ...[
+              const SizedBox(height: AppDimensions.paddingMedium),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: onSaveOriginal,
+                      child: const Text('원본으로 저장'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: correctedText != null ? onSaveCorrected : null,
+                      child: const Text('보정본으로 저장'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -805,6 +933,7 @@ class _ControlsRow extends StatelessWidget {
     required this.onFinishRecording,
     required this.onSave,
     required this.onPlayback,
+    required this.correctionEnabled,
   });
 
   final RecordingState recordingState;
@@ -813,6 +942,7 @@ class _ControlsRow extends StatelessWidget {
   final VoidCallback onFinishRecording;
   final Future<void> Function() onSave;
   final VoidCallback? onPlayback;
+  final bool correctionEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -889,13 +1019,68 @@ class _ControlsRow extends StatelessWidget {
         tooltip: AppStrings.btnSave,
         isFilled: true,
       ),
-    RecordingState.done => _RoundButton(
-        icon: Icons.check_rounded,
-        tooltip: AppStrings.btnSave,
-        onTap: onSave,
-        isFilled: true,
-      ),
+    // 보정 활성화 + done: 본문 버튼으로 저장하므로 우측 버튼 비활성화
+    RecordingState.done => correctionEnabled
+        ? const SizedBox(width: 64, height: 64)
+        : _RoundButton(
+            icon: Icons.check_rounded,
+            tooltip: AppStrings.btnSave,
+            onTap: onSave,
+            isFilled: true,
+          ),
   };
+}
+
+// ─── 메타데이터 보조 위젯 ──────────────────────────────────────────────────────
+
+class _MetaRow extends StatelessWidget {
+  const _MetaRow({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Icon(icon, size: 14, color: scheme.onSurfaceVariant),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TagBadge extends StatelessWidget {
+  const _TagBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: scheme.onSurfaceVariant,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
 }
 
 // ─── 사이드 원형 버튼 (64px) ──────────────────────────────────────────────────

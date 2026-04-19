@@ -30,15 +30,7 @@ class DiaryCard extends ConsumerWidget {
     _     => Icons.self_improvement_rounded,
   };
 
-  /// 보정 텍스트에서 첫 문장을 제목으로 추출 (최대 30자)
-  String get _title {
-    final text = entry.correctedText.isNotEmpty
-        ? entry.correctedText
-        : entry.rawText;
-    final dotIdx = text.indexOf('.');
-    final raw = dotIdx > 0 ? text.substring(0, dotIdx) : text;
-    return raw.length > 30 ? '${raw.substring(0, 30)}…' : raw;
-  }
+  String get _title => entry.title.isEmpty ? '제목 없음' : entry.title;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -115,8 +107,8 @@ class DiaryCard extends ConsumerWidget {
               const SizedBox(height: 12),
               // 본문 2줄 preview
               Text(
-                entry.correctedText.isNotEmpty
-                    ? entry.correctedText
+                entry.correctedText?.isNotEmpty == true
+                    ? entry.correctedText!
                     : entry.rawText,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

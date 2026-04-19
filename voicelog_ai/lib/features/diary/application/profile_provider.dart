@@ -12,7 +12,7 @@ Future<AppStats> appStats(AppStatsRef ref) async {
   final totalEntries = entries.length;
   final totalWords = entries.fold<int>(
     0,
-    (sum, e) => sum + e.correctedText.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length,
+    (sum, e) => sum + (e.correctedText ?? e.rawText).split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length,
   );
 
   final dates = entries

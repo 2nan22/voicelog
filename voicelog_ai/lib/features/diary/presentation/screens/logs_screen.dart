@@ -207,7 +207,7 @@ class _TimelineItem extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      entry.correctedText,
+                      entry.correctedText ?? entry.rawText,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(

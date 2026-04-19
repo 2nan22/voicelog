@@ -115,7 +115,7 @@ class _DiaryDetailBody extends ConsumerWidget {
             _EmotionKeywordGrid(entry: entry, emotionColor: _emotionColor),
             const SizedBox(height: 40),
             // 본문 prose
-            _ProseBody(text: entry.correctedText),
+            _ProseBody(text: entry.correctedText ?? entry.rawText),
             const SizedBox(height: 40),
             // 원본 텍스트 토글 카드
             _OriginalTextSection(rawText: entry.rawText),
