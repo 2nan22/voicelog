@@ -6,49 +6,68 @@ import 'package:voicelog_ai/core/utils/llm_response_parser.dart';
 part 'diary_process_provider.freezed.dart';
 part 'diary_process_provider.g.dart';
 
-/// LLM 스트리밍 처리 상태.
+enum LlmPhase { idle, metadata, correction, done }
+
+/// LLM 2-phase 처리 상태.
 ///
-/// [rawAccumulated]: 스트리밍 중 LLM 출력 누적 원문
-/// [parsedResult]: [태그] 섹션 감지 후 또는 finalize() 호출 시 파싱된 결과
+/// [phase]: 현재 처리 단계
+/// [rawAccumulated]: 현재 스트리밍 중인 LLM 출력 누적 원문
+/// [metadataResult]: 메타데이터 추출 완료 시 설정
+/// [correctedText]: 보정 완료 시 설정
 @freezed
 class DiaryProcessState with _$DiaryProcessState {
   const factory DiaryProcessState({
+    @Default(LlmPhase.idle) LlmPhase phase,
     @Default('') String rawAccumulated,
-    LlmParsedResult? parsedResult,
+    LlmMetadataResult? metadataResult,
+    String? correctedText,
   }) = _DiaryProcessState;
 }
 
-/// LLM 스트림 청크를 누적하고 파싱 결과를 보유하는 Notifier.
-///
-/// 사용 흐름:
-/// 1. [reset] — 처리 시작 전 초기화
-/// 2. [appendChunk] — 스트리밍 청크마다 호출
-/// 3. [finalize] — 스트림 완료 후 최종 파싱 (스트림 중 [태그] 미감지 시 fallback)
 @riverpod
 class DiaryProcessNotifier extends _$DiaryProcessNotifier {
   @override
   DiaryProcessState build() => const DiaryProcessState();
 
-  /// 스트리밍 청크를 누적한다. [태그] 섹션 감지 시 즉시 파싱한다.
+  void startMetadata() => state = state.copyWith(
+        phase: LlmPhase.metadata,
+        rawAccumulated: '',
+      );
+
+  void startCorrection() => state = state.copyWith(
+        phase: LlmPhase.correction,
+        rawAccumulated: '',
+      );
+
+  /// 스트리밍 청크를 누적한다.
+  /// 메타데이터 단계에서 [장소] 섹션 감지 시 즉시 파싱한다.
   void appendChunk(String chunk) {
     final newRaw = state.rawAccumulated + chunk;
-    if (newRaw.contains('[태그]')) {
+    if (state.phase == LlmPhase.metadata && newRaw.contains('[장소]')) {
       state = state.copyWith(
         rawAccumulated: newRaw,
-        parsedResult: LlmResponseParser.parse(newRaw),
+        metadataResult: LlmResponseParser.parseMetadata(newRaw),
       );
     } else {
       state = state.copyWith(rawAccumulated: newRaw);
     }
   }
 
-  /// 스트림 완료 후 전체 누적 텍스트를 파싱한다.
-  void finalize() {
+  /// 메타데이터 스트림 완료 후 전체 누적 텍스트를 최종 파싱한다.
+  void finalizeMetadata() {
     state = state.copyWith(
-      parsedResult: LlmResponseParser.parse(state.rawAccumulated),
+      metadataResult: LlmResponseParser.parseMetadata(state.rawAccumulated),
+      phase: LlmPhase.done,
     );
   }
 
-  /// 상태를 초기화한다.
+  /// 보정 스트림 완료 후 전체 누적 텍스트를 최종 파싱한다.
+  void finalizeCorrection() {
+    state = state.copyWith(
+      correctedText: LlmResponseParser.parseCorrectedText(state.rawAccumulated),
+      phase: LlmPhase.done,
+    );
+  }
+
   void reset() => state = const DiaryProcessState();
 }

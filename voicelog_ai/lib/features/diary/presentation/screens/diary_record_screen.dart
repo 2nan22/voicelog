@@ -89,6 +89,8 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
   Future<void> _runLLMFlow(String rawText) async {
     final service = ref.read(llmInferenceServiceProvider);
     final processNotifier = ref.read(diaryProcessNotifierProvider.notifier);
+    final correctionEnabled =
+        ref.read(settingsNotifierProvider).valueOrNull?.correctionEnabled ?? false;
 
     if (!service.isReady) {
       try {
@@ -101,32 +103,48 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
       }
     }
 
+    // Phase 1: 메타데이터 추출
     try {
-      final settingsAsync = ref.read(settingsNotifierProvider);
-      final writingStyle = settingsAsync.valueOrNull?.writingStyle ?? WritingStyle.diary;
-      final styleInstruction =
-          kWritingStyleInstructions[writingStyle] ?? kWritingStyleInstructions[WritingStyle.diary]!;
-      final prompt = kDiaryProcessingPrompt
-          .replaceAll('{style_instruction}', styleInstruction)
-          .replaceAll('{raw_text}', rawText);
-
+      processNotifier.startMetadata();
+      final prompt = kMetadataExtractionPrompt.replaceAll('{raw_text}', rawText);
       await for (final chunk in service.generateStream(prompt)) {
         if (!mounted) return;
-        if (ref.read(diaryRecordNotifierProvider) != RecordingState.processing) {
-          return;
-        }
         processNotifier.appendChunk(chunk);
       }
-      if (!mounted) return;
-      processNotifier.finalize();
+      processNotifier.finalizeMetadata();
       _inferenceTimer?.cancel();
-      ref.read(diaryRecordNotifierProvider.notifier).finishRecording();
     } catch (e) {
       if (!mounted) return;
       _inferenceTimer?.cancel();
-      AppLogger.error('LLM 처리 실패', e);
+      AppLogger.error('메타데이터 추출 실패', e);
       ref.read(diaryRecordNotifierProvider.notifier).setError();
+      return;
     }
+
+    // Phase 2: 문맥 보정 (설정 활성화 시)
+    if (correctionEnabled && mounted) {
+      try {
+        final settingsAsync = ref.read(settingsNotifierProvider);
+        final writingStyle = settingsAsync.valueOrNull?.writingStyle ?? WritingStyle.diary;
+        final styleInstruction =
+            kWritingStyleInstructions[writingStyle] ?? kWritingStyleInstructions[WritingStyle.diary]!;
+        processNotifier.startCorrection();
+        final prompt = kCorrectionPrompt
+            .replaceAll('{style_instruction}', styleInstruction)
+            .replaceAll('{raw_text}', rawText);
+        await for (final chunk in service.generateStream(prompt)) {
+          if (!mounted) return;
+          processNotifier.appendChunk(chunk);
+        }
+        processNotifier.finalizeCorrection();
+      } catch (e) {
+        AppLogger.error('문맥 보정 실패', e);
+        // 보정 실패는 치명적이지 않음 — 메타데이터로 계속 진행
+      }
+    }
+
+    if (!mounted) return;
+    ref.read(diaryRecordNotifierProvider.notifier).finishRecording();
   }
 
   void _onDelete() {
@@ -163,17 +181,21 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
     }
   }
 
-  Future<void> _onSave() async {
+  Future<void> _onSave({bool useCorrection = false}) async {
     final processState = ref.read(diaryProcessNotifierProvider);
-    final parsedResult = processState.parsedResult;
-    if (parsedResult == null) return;
+    final metadataResult = processState.metadataResult;
+    if (metadataResult == null) return;
 
     final rawText = ref.read(sttTextNotifierProvider);
+    final correctedText = useCorrection ? processState.correctedText : null;
     final entry = DiaryEntry.create(
       rawText: rawText,
-      correctedText: parsedResult.correctedText,
-      emotion: parsedResult.emotion,
-      tags: parsedResult.tags,
+      title: metadataResult.title,
+      emotion: metadataResult.emotion,
+      tags: metadataResult.tags,
+      people: metadataResult.people,
+      places: metadataResult.places,
+      correctedText: correctedText,
     );
 
     try {
@@ -530,8 +552,8 @@ class _GlassSttContainer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isLlmPhase = recordingState == RecordingState.processing ||
         recordingState == RecordingState.done;
-    final parsedResult = isLlmPhase
-        ? ref.watch(diaryProcessNotifierProvider.select((s) => s.parsedResult))
+    final metadataResult = isLlmPhase
+        ? ref.watch(diaryProcessNotifierProvider.select((s) => s.metadataResult))
         : null;
     final rawAccumulated = isLlmPhase
         ? ref.watch(diaryProcessNotifierProvider.select((s) => s.rawAccumulated))
@@ -554,7 +576,7 @@ class _GlassSttContainer extends ConsumerWidget {
             ),
           ),
           child: isLlmPhase
-              ? _buildLlmContent(context, parsedResult, rawAccumulated)
+              ? _buildLlmContent(context, metadataResult, rawAccumulated)
               : _buildSttContent(context),
         ),
       ),
@@ -604,7 +626,7 @@ class _GlassSttContainer extends ConsumerWidget {
     );
   }
 
-  Widget _buildLlmContent(BuildContext context, dynamic parsedResult, String rawAccumulated) {
+  Widget _buildLlmContent(BuildContext context, dynamic metadataResult, String rawAccumulated) {
     final scheme = Theme.of(context).colorScheme;
 
     // processing + 아직 스트리밍 시작 전 → 스피너 + 메시지
@@ -649,7 +671,7 @@ class _GlassSttContainer extends ConsumerWidget {
         // 스트리밍 텍스트
         const StreamingTextWidget(),
         // 파싱 완료 후 감정·태그 뱃지
-        if (parsedResult != null) ...[
+        if (metadataResult != null) ...[
           const SizedBox(height: 16),
           Divider(height: 1, color: scheme.outlineVariant),
           const SizedBox(height: 16),

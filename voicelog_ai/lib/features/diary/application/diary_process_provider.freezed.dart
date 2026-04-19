@@ -16,8 +16,10 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$DiaryProcessState {
+  LlmPhase get phase => throw _privateConstructorUsedError;
   String get rawAccumulated => throw _privateConstructorUsedError;
-  LlmParsedResult? get parsedResult => throw _privateConstructorUsedError;
+  LlmMetadataResult? get metadataResult => throw _privateConstructorUsedError;
+  String? get correctedText => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $DiaryProcessStateCopyWith<DiaryProcessState> get copyWith =>
@@ -30,9 +32,13 @@ abstract class $DiaryProcessStateCopyWith<$Res> {
           DiaryProcessState value, $Res Function(DiaryProcessState) then) =
       _$DiaryProcessStateCopyWithImpl<$Res, DiaryProcessState>;
   @useResult
-  $Res call({String rawAccumulated, LlmParsedResult? parsedResult});
+  $Res call(
+      {LlmPhase phase,
+      String rawAccumulated,
+      LlmMetadataResult? metadataResult,
+      String? correctedText});
 
-  $LlmParsedResultCopyWith<$Res>? get parsedResult;
+  $LlmMetadataResultCopyWith<$Res>? get metadataResult;
 }
 
 /// @nodoc
@@ -48,30 +54,40 @@ class _$DiaryProcessStateCopyWithImpl<$Res, $Val extends DiaryProcessState>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? phase = null,
     Object? rawAccumulated = null,
-    Object? parsedResult = freezed,
+    Object? metadataResult = freezed,
+    Object? correctedText = freezed,
   }) {
     return _then(_value.copyWith(
+      phase: null == phase
+          ? _value.phase
+          : phase // ignore: cast_nullable_to_non_nullable
+              as LlmPhase,
       rawAccumulated: null == rawAccumulated
           ? _value.rawAccumulated
           : rawAccumulated // ignore: cast_nullable_to_non_nullable
               as String,
-      parsedResult: freezed == parsedResult
-          ? _value.parsedResult
-          : parsedResult // ignore: cast_nullable_to_non_nullable
-              as LlmParsedResult?,
+      metadataResult: freezed == metadataResult
+          ? _value.metadataResult
+          : metadataResult // ignore: cast_nullable_to_non_nullable
+              as LlmMetadataResult?,
+      correctedText: freezed == correctedText
+          ? _value.correctedText
+          : correctedText // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 
   @override
   @pragma('vm:prefer-inline')
-  $LlmParsedResultCopyWith<$Res>? get parsedResult {
-    if (_value.parsedResult == null) {
+  $LlmMetadataResultCopyWith<$Res>? get metadataResult {
+    if (_value.metadataResult == null) {
       return null;
     }
 
-    return $LlmParsedResultCopyWith<$Res>(_value.parsedResult!, (value) {
-      return _then(_value.copyWith(parsedResult: value) as $Val);
+    return $LlmMetadataResultCopyWith<$Res>(_value.metadataResult!, (value) {
+      return _then(_value.copyWith(metadataResult: value) as $Val);
     });
   }
 }
@@ -84,10 +100,14 @@ abstract class _$$DiaryProcessStateImplCopyWith<$Res>
       __$$DiaryProcessStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String rawAccumulated, LlmParsedResult? parsedResult});
+  $Res call(
+      {LlmPhase phase,
+      String rawAccumulated,
+      LlmMetadataResult? metadataResult,
+      String? correctedText});
 
   @override
-  $LlmParsedResultCopyWith<$Res>? get parsedResult;
+  $LlmMetadataResultCopyWith<$Res>? get metadataResult;
 }
 
 /// @nodoc
@@ -101,18 +121,28 @@ class __$$DiaryProcessStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? phase = null,
     Object? rawAccumulated = null,
-    Object? parsedResult = freezed,
+    Object? metadataResult = freezed,
+    Object? correctedText = freezed,
   }) {
     return _then(_$DiaryProcessStateImpl(
+      phase: null == phase
+          ? _value.phase
+          : phase // ignore: cast_nullable_to_non_nullable
+              as LlmPhase,
       rawAccumulated: null == rawAccumulated
           ? _value.rawAccumulated
           : rawAccumulated // ignore: cast_nullable_to_non_nullable
               as String,
-      parsedResult: freezed == parsedResult
-          ? _value.parsedResult
-          : parsedResult // ignore: cast_nullable_to_non_nullable
-              as LlmParsedResult?,
+      metadataResult: freezed == metadataResult
+          ? _value.metadataResult
+          : metadataResult // ignore: cast_nullable_to_non_nullable
+              as LlmMetadataResult?,
+      correctedText: freezed == correctedText
+          ? _value.correctedText
+          : correctedText // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -120,17 +150,26 @@ class __$$DiaryProcessStateImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$DiaryProcessStateImpl implements _DiaryProcessState {
-  const _$DiaryProcessStateImpl({this.rawAccumulated = '', this.parsedResult});
+  const _$DiaryProcessStateImpl(
+      {this.phase = LlmPhase.idle,
+      this.rawAccumulated = '',
+      this.metadataResult,
+      this.correctedText});
 
+  @override
+  @JsonKey()
+  final LlmPhase phase;
   @override
   @JsonKey()
   final String rawAccumulated;
   @override
-  final LlmParsedResult? parsedResult;
+  final LlmMetadataResult? metadataResult;
+  @override
+  final String? correctedText;
 
   @override
   String toString() {
-    return 'DiaryProcessState(rawAccumulated: $rawAccumulated, parsedResult: $parsedResult)';
+    return 'DiaryProcessState(phase: $phase, rawAccumulated: $rawAccumulated, metadataResult: $metadataResult, correctedText: $correctedText)';
   }
 
   @override
@@ -138,14 +177,18 @@ class _$DiaryProcessStateImpl implements _DiaryProcessState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$DiaryProcessStateImpl &&
+            (identical(other.phase, phase) || other.phase == phase) &&
             (identical(other.rawAccumulated, rawAccumulated) ||
                 other.rawAccumulated == rawAccumulated) &&
-            (identical(other.parsedResult, parsedResult) ||
-                other.parsedResult == parsedResult));
+            (identical(other.metadataResult, metadataResult) ||
+                other.metadataResult == metadataResult) &&
+            (identical(other.correctedText, correctedText) ||
+                other.correctedText == correctedText));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, rawAccumulated, parsedResult);
+  int get hashCode => Object.hash(
+      runtimeType, phase, rawAccumulated, metadataResult, correctedText);
 
   @JsonKey(ignore: true)
   @override
@@ -157,13 +200,19 @@ class _$DiaryProcessStateImpl implements _DiaryProcessState {
 
 abstract class _DiaryProcessState implements DiaryProcessState {
   const factory _DiaryProcessState(
-      {final String rawAccumulated,
-      final LlmParsedResult? parsedResult}) = _$DiaryProcessStateImpl;
+      {final LlmPhase phase,
+      final String rawAccumulated,
+      final LlmMetadataResult? metadataResult,
+      final String? correctedText}) = _$DiaryProcessStateImpl;
 
+  @override
+  LlmPhase get phase;
   @override
   String get rawAccumulated;
   @override
-  LlmParsedResult? get parsedResult;
+  LlmMetadataResult? get metadataResult;
+  @override
+  String? get correctedText;
   @override
   @JsonKey(ignore: true)
   _$$DiaryProcessStateImplCopyWith<_$DiaryProcessStateImpl> get copyWith =>

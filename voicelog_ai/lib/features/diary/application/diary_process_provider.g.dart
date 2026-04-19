@@ -7,16 +7,9 @@ part of 'diary_process_provider.dart';
 // **************************************************************************
 
 String _$diaryProcessNotifierHash() =>
-    r'0cee329f03cd118e45955750895c4dc4684da8a9';
+    r'e0f13081e76114f2786a31593f753815ad0ef91e';
 
-/// LLM 스트림 청크를 누적하고 파싱 결과를 보유하는 Notifier.
-///
-/// 사용 흐름:
-/// 1. [reset] — 처리 시작 전 초기화
-/// 2. [appendChunk] — 스트리밍 청크마다 호출
-/// 3. [finalize] — 스트림 완료 후 최종 파싱 (스트림 중 [태그] 미감지 시 fallback)
-///
-/// Copied from [DiaryProcessNotifier].
+/// See also [DiaryProcessNotifier].
 @ProviderFor(DiaryProcessNotifier)
 final diaryProcessNotifierProvider = AutoDisposeNotifierProvider<
     DiaryProcessNotifier, DiaryProcessState>.internal(
