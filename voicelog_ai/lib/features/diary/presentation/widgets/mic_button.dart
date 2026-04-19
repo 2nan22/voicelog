@@ -147,13 +147,13 @@ class _MicButtonState extends ConsumerState<MicButton>
         if (!mounted) return;
         if (!granted) return;
 
-        // STT를 먼저 시작하여 마이크를 선점한 뒤 recording 상태로 전환.
-        await _beginListening();
-
-        // STT 시작 완료 후 recording 상태로 전환
-        if (!mounted) return;
+        // recording 상태를 먼저 설정한 뒤 STT를 시작해야 한다.
+        // STT 콜백(onResult/onStatus)은 _beginListening()의 await 중에 발생할 수 있는데,
+        // startRecording()을 나중에 호출하면 이미 processing으로 전환된 상태를
+        // recording으로 되돌려 LLM 흐름이 끊긴다.
         notifier.startRecording();
         _startPulse();
+        await _beginListening();
       } else if (state == RecordingState.recording) {
         await sttService.stopListening();
         notifier.startProcessing();

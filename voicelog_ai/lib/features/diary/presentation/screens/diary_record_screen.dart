@@ -275,19 +275,30 @@ class _DiaryRecordScreenState extends ConsumerState<DiaryRecordScreen>
                         recordingState: recordingState,
                       ),
                       const SizedBox(height: 16),
-                      // AI 처리 중 배지 (processing 상태에만)
-                      if (recordingState == RecordingState.processing)
-                        const _AiStatusBadge(),
+                      // AI 처리 중 배지 — Visibility로 감싸야 Center(_ControlsRow)의
+                      // 리스트 위치가 상태 전환 시 밀리지 않는다.
+                      Visibility(
+                        visible: recordingState == RecordingState.processing,
+                        child: const _AiStatusBadge(),
+                      ),
                       const Flexible(flex: 2, child: SizedBox()),
-                      // 파형 (recording 상태에만)
-                      if (recordingState == RecordingState.recording) ...[
-                        WaveformWidget(
-                          isRecording: true,
-                          amplitudes: amplitudes,
+                      // 파형 — 동일 이유로 Visibility 사용.
+                      // if(...) spread를 쓰면 WaveformWidget 삽입 시
+                      // 뒤 Center의 인덱스가 밀려 _MicButtonState가 dispose된다.
+                      Visibility(
+                        visible: recordingState == RecordingState.recording,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            WaveformWidget(
+                              isRecording: true,
+                              amplitudes: amplitudes,
+                            ),
+                            const SizedBox(height: 24),
+                          ],
                         ),
-                        const SizedBox(height: 24),
-                      ],
-                      // 컨트롤 버튼 행
+                      ),
+                      // 컨트롤 버튼 행 — 항상 동일 인덱스 위치
                       Center(
                         child: _ControlsRow(
                           recordingState: recordingState,
