@@ -30,6 +30,10 @@
 | Session 16 | `_complete/session_16_record_home_v2.md` | 문체 선택, 녹음 화면 STT/LLM 카드 분리, 파형 연동 |
 | Session 17 | `_complete/session_17_home_calendar.md` | 홈 화면 캘린더 뷰로 교체 (table_calendar) |
 | Session 18 | `session_18_ui_stitch_v2.md` | Stitch v0.0.2 기반 UI 전면 개선 (4 꼭지) |
+| Session 19 | `session_19_record_ux_fix.md` | 녹음 UX 개선 및 STT 타임아웃 처리 |
+| Session 20 | `session_20_stt_debug.md` | STT 근본 원인 디버깅 (record·audioplayers 제거, dictation 모드) |
+| Session 21 | `session_21_stt_provider_refactor.md` | STT 콜백 Application 레이어 이동 (mounted=false 이슈 근본 수정) |
+| Session 22 | `session_22_llm_metadata_redesign.md` | LLM 메타데이터 추출 재설계, 저장 버그 수정, 보정 옵션, 상세 재처리 |
 
 ---
 
