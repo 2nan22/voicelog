@@ -18,13 +18,18 @@ const AppSettingsDocumentSchema = CollectionSchema(
   name: r'AppSettingsDocument',
   id: -4072782798708323131,
   properties: {
-    r'isDarkMode': PropertySchema(
+    r'correctionEnabled': PropertySchema(
       id: 0,
+      name: r'correctionEnabled',
+      type: IsarType.bool,
+    ),
+    r'isDarkMode': PropertySchema(
+      id: 1,
       name: r'isDarkMode',
       type: IsarType.bool,
     ),
     r'writingStyleIndex': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'writingStyleIndex',
       type: IsarType.long,
     )
@@ -72,8 +77,9 @@ void _appSettingsDocumentSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeBool(offsets[0], object.isDarkMode);
-  writer.writeLong(offsets[1], object.writingStyleIndex);
+  writer.writeBool(offsets[0], object.correctionEnabled);
+  writer.writeBool(offsets[1], object.isDarkMode);
+  writer.writeLong(offsets[2], object.writingStyleIndex);
 }
 
 AppSettingsDocument _appSettingsDocumentDeserialize(
@@ -83,9 +89,10 @@ AppSettingsDocument _appSettingsDocumentDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = AppSettingsDocument();
+  object.correctionEnabled = reader.readBool(offsets[0]);
   object.id = id;
-  object.isDarkMode = reader.readBool(offsets[0]);
-  object.writingStyleIndex = reader.readLong(offsets[1]);
+  object.isDarkMode = reader.readBool(offsets[1]);
+  object.writingStyleIndex = reader.readLong(offsets[2]);
   return object;
 }
 
@@ -99,6 +106,8 @@ P _appSettingsDocumentDeserializeProp<P>(
     case 0:
       return (reader.readBool(offset)) as P;
     case 1:
+      return (reader.readBool(offset)) as P;
+    case 2:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -304,6 +313,16 @@ extension AppSettingsDocumentQueryWhere
 extension AppSettingsDocumentQueryFilter on QueryBuilder<AppSettingsDocument,
     AppSettingsDocument, QFilterCondition> {
   QueryBuilder<AppSettingsDocument, AppSettingsDocument, QAfterFilterCondition>
+      correctionEnabledEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'correctionEnabled',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettingsDocument, AppSettingsDocument, QAfterFilterCondition>
       idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -435,6 +454,20 @@ extension AppSettingsDocumentQueryLinks on QueryBuilder<AppSettingsDocument,
 extension AppSettingsDocumentQuerySortBy
     on QueryBuilder<AppSettingsDocument, AppSettingsDocument, QSortBy> {
   QueryBuilder<AppSettingsDocument, AppSettingsDocument, QAfterSortBy>
+      sortByCorrectionEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'correctionEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettingsDocument, AppSettingsDocument, QAfterSortBy>
+      sortByCorrectionEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'correctionEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AppSettingsDocument, AppSettingsDocument, QAfterSortBy>
       sortByIsDarkMode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isDarkMode', Sort.asc);
@@ -465,6 +498,20 @@ extension AppSettingsDocumentQuerySortBy
 
 extension AppSettingsDocumentQuerySortThenBy
     on QueryBuilder<AppSettingsDocument, AppSettingsDocument, QSortThenBy> {
+  QueryBuilder<AppSettingsDocument, AppSettingsDocument, QAfterSortBy>
+      thenByCorrectionEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'correctionEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettingsDocument, AppSettingsDocument, QAfterSortBy>
+      thenByCorrectionEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'correctionEnabled', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppSettingsDocument, AppSettingsDocument, QAfterSortBy>
       thenById() {
     return QueryBuilder.apply(this, (query) {
@@ -511,6 +558,13 @@ extension AppSettingsDocumentQuerySortThenBy
 extension AppSettingsDocumentQueryWhereDistinct
     on QueryBuilder<AppSettingsDocument, AppSettingsDocument, QDistinct> {
   QueryBuilder<AppSettingsDocument, AppSettingsDocument, QDistinct>
+      distinctByCorrectionEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'correctionEnabled');
+    });
+  }
+
+  QueryBuilder<AppSettingsDocument, AppSettingsDocument, QDistinct>
       distinctByIsDarkMode() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isDarkMode');
@@ -530,6 +584,13 @@ extension AppSettingsDocumentQueryProperty
   QueryBuilder<AppSettingsDocument, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<AppSettingsDocument, bool, QQueryOperations>
+      correctionEnabledProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'correctionEnabled');
     });
   }
 

@@ -18,6 +18,7 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$AppSettings {
   bool get isDarkMode => throw _privateConstructorUsedError;
   WritingStyle get writingStyle => throw _privateConstructorUsedError;
+  bool get correctionEnabled => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $AppSettingsCopyWith<AppSettings> get copyWith =>
@@ -30,7 +31,8 @@ abstract class $AppSettingsCopyWith<$Res> {
           AppSettings value, $Res Function(AppSettings) then) =
       _$AppSettingsCopyWithImpl<$Res, AppSettings>;
   @useResult
-  $Res call({bool isDarkMode, WritingStyle writingStyle});
+  $Res call(
+      {bool isDarkMode, WritingStyle writingStyle, bool correctionEnabled});
 }
 
 /// @nodoc
@@ -48,6 +50,7 @@ class _$AppSettingsCopyWithImpl<$Res, $Val extends AppSettings>
   $Res call({
     Object? isDarkMode = null,
     Object? writingStyle = null,
+    Object? correctionEnabled = null,
   }) {
     return _then(_value.copyWith(
       isDarkMode: null == isDarkMode
@@ -58,6 +61,10 @@ class _$AppSettingsCopyWithImpl<$Res, $Val extends AppSettings>
           ? _value.writingStyle
           : writingStyle // ignore: cast_nullable_to_non_nullable
               as WritingStyle,
+      correctionEnabled: null == correctionEnabled
+          ? _value.correctionEnabled
+          : correctionEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -70,7 +77,8 @@ abstract class _$$AppSettingsImplCopyWith<$Res>
       __$$AppSettingsImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({bool isDarkMode, WritingStyle writingStyle});
+  $Res call(
+      {bool isDarkMode, WritingStyle writingStyle, bool correctionEnabled});
 }
 
 /// @nodoc
@@ -86,6 +94,7 @@ class __$$AppSettingsImplCopyWithImpl<$Res>
   $Res call({
     Object? isDarkMode = null,
     Object? writingStyle = null,
+    Object? correctionEnabled = null,
   }) {
     return _then(_$AppSettingsImpl(
       isDarkMode: null == isDarkMode
@@ -96,6 +105,10 @@ class __$$AppSettingsImplCopyWithImpl<$Res>
           ? _value.writingStyle
           : writingStyle // ignore: cast_nullable_to_non_nullable
               as WritingStyle,
+      correctionEnabled: null == correctionEnabled
+          ? _value.correctionEnabled
+          : correctionEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -104,7 +117,9 @@ class __$$AppSettingsImplCopyWithImpl<$Res>
 
 class _$AppSettingsImpl implements _AppSettings {
   const _$AppSettingsImpl(
-      {this.isDarkMode = false, this.writingStyle = WritingStyle.diary});
+      {this.isDarkMode = false,
+      this.writingStyle = WritingStyle.diary,
+      this.correctionEnabled = false});
 
   @override
   @JsonKey()
@@ -112,10 +127,13 @@ class _$AppSettingsImpl implements _AppSettings {
   @override
   @JsonKey()
   final WritingStyle writingStyle;
+  @override
+  @JsonKey()
+  final bool correctionEnabled;
 
   @override
   String toString() {
-    return 'AppSettings(isDarkMode: $isDarkMode, writingStyle: $writingStyle)';
+    return 'AppSettings(isDarkMode: $isDarkMode, writingStyle: $writingStyle, correctionEnabled: $correctionEnabled)';
   }
 
   @override
@@ -126,11 +144,14 @@ class _$AppSettingsImpl implements _AppSettings {
             (identical(other.isDarkMode, isDarkMode) ||
                 other.isDarkMode == isDarkMode) &&
             (identical(other.writingStyle, writingStyle) ||
-                other.writingStyle == writingStyle));
+                other.writingStyle == writingStyle) &&
+            (identical(other.correctionEnabled, correctionEnabled) ||
+                other.correctionEnabled == correctionEnabled));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, isDarkMode, writingStyle);
+  int get hashCode =>
+      Object.hash(runtimeType, isDarkMode, writingStyle, correctionEnabled);
 
   @JsonKey(ignore: true)
   @override
@@ -142,12 +163,15 @@ class _$AppSettingsImpl implements _AppSettings {
 abstract class _AppSettings implements AppSettings {
   const factory _AppSettings(
       {final bool isDarkMode,
-      final WritingStyle writingStyle}) = _$AppSettingsImpl;
+      final WritingStyle writingStyle,
+      final bool correctionEnabled}) = _$AppSettingsImpl;
 
   @override
   bool get isDarkMode;
   @override
   WritingStyle get writingStyle;
+  @override
+  bool get correctionEnabled;
   @override
   @JsonKey(ignore: true)
   _$$AppSettingsImplCopyWith<_$AppSettingsImpl> get copyWith =>

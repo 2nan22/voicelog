@@ -9,9 +9,12 @@ class DiaryEntry with _$DiaryEntry {
   const factory DiaryEntry({
     required int id,
     required String rawText,
-    required String correctedText,
+    required String title,
     required String emotion,
     required List<String> tags,
+    @Default([]) List<String> people,
+    @Default([]) List<String> places,
+    String? correctedText,
     required DateTime createdAt,
   }) = _DiaryEntry;
 
@@ -21,16 +24,22 @@ class DiaryEntry with _$DiaryEntry {
   /// 새 일기 엔트리 생성 팩토리 메서드 (id는 DB 저장 후 부여)
   factory DiaryEntry.create({
     required String rawText,
-    required String correctedText,
+    required String title,
     required String emotion,
     required List<String> tags,
+    List<String> people = const [],
+    List<String> places = const [],
+    String? correctedText,
   }) =>
       DiaryEntry(
         id: -1,
         rawText: rawText,
-        correctedText: correctedText,
+        title: title,
         emotion: emotion,
         tags: tags,
+        people: people,
+        places: places,
+        correctedText: correctedText,
         createdAt: DateTime.now(),
       );
 }

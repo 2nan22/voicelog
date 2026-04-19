@@ -15,5 +15,6 @@ class AppSettings with _$AppSettings {
   const factory AppSettings({
     @Default(false) bool isDarkMode,
     @Default(WritingStyle.diary) WritingStyle writingStyle,
+    @Default(false) bool correctionEnabled,
   }) = _AppSettings;
 }

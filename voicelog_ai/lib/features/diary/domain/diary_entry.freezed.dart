@@ -22,9 +22,12 @@ DiaryEntry _$DiaryEntryFromJson(Map<String, dynamic> json) {
 mixin _$DiaryEntry {
   int get id => throw _privateConstructorUsedError;
   String get rawText => throw _privateConstructorUsedError;
-  String get correctedText => throw _privateConstructorUsedError;
+  String get title => throw _privateConstructorUsedError;
   String get emotion => throw _privateConstructorUsedError;
   List<String> get tags => throw _privateConstructorUsedError;
+  List<String> get people => throw _privateConstructorUsedError;
+  List<String> get places => throw _privateConstructorUsedError;
+  String? get correctedText => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -42,9 +45,12 @@ abstract class $DiaryEntryCopyWith<$Res> {
   $Res call(
       {int id,
       String rawText,
-      String correctedText,
+      String title,
       String emotion,
       List<String> tags,
+      List<String> people,
+      List<String> places,
+      String? correctedText,
       DateTime createdAt});
 }
 
@@ -63,9 +69,12 @@ class _$DiaryEntryCopyWithImpl<$Res, $Val extends DiaryEntry>
   $Res call({
     Object? id = null,
     Object? rawText = null,
-    Object? correctedText = null,
+    Object? title = null,
     Object? emotion = null,
     Object? tags = null,
+    Object? people = null,
+    Object? places = null,
+    Object? correctedText = freezed,
     Object? createdAt = null,
   }) {
     return _then(_value.copyWith(
@@ -77,9 +86,9 @@ class _$DiaryEntryCopyWithImpl<$Res, $Val extends DiaryEntry>
           ? _value.rawText
           : rawText // ignore: cast_nullable_to_non_nullable
               as String,
-      correctedText: null == correctedText
-          ? _value.correctedText
-          : correctedText // ignore: cast_nullable_to_non_nullable
+      title: null == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
               as String,
       emotion: null == emotion
           ? _value.emotion
@@ -89,6 +98,18 @@ class _$DiaryEntryCopyWithImpl<$Res, $Val extends DiaryEntry>
           ? _value.tags
           : tags // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      people: null == people
+          ? _value.people
+          : people // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      places: null == places
+          ? _value.places
+          : places // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      correctedText: freezed == correctedText
+          ? _value.correctedText
+          : correctedText // ignore: cast_nullable_to_non_nullable
+              as String?,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -108,9 +129,12 @@ abstract class _$$DiaryEntryImplCopyWith<$Res>
   $Res call(
       {int id,
       String rawText,
-      String correctedText,
+      String title,
       String emotion,
       List<String> tags,
+      List<String> people,
+      List<String> places,
+      String? correctedText,
       DateTime createdAt});
 }
 
@@ -127,9 +151,12 @@ class __$$DiaryEntryImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? rawText = null,
-    Object? correctedText = null,
+    Object? title = null,
     Object? emotion = null,
     Object? tags = null,
+    Object? people = null,
+    Object? places = null,
+    Object? correctedText = freezed,
     Object? createdAt = null,
   }) {
     return _then(_$DiaryEntryImpl(
@@ -141,9 +168,9 @@ class __$$DiaryEntryImplCopyWithImpl<$Res>
           ? _value.rawText
           : rawText // ignore: cast_nullable_to_non_nullable
               as String,
-      correctedText: null == correctedText
-          ? _value.correctedText
-          : correctedText // ignore: cast_nullable_to_non_nullable
+      title: null == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
               as String,
       emotion: null == emotion
           ? _value.emotion
@@ -153,6 +180,18 @@ class __$$DiaryEntryImplCopyWithImpl<$Res>
           ? _value._tags
           : tags // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      people: null == people
+          ? _value._people
+          : people // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      places: null == places
+          ? _value._places
+          : places // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      correctedText: freezed == correctedText
+          ? _value.correctedText
+          : correctedText // ignore: cast_nullable_to_non_nullable
+              as String?,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -167,11 +206,16 @@ class _$DiaryEntryImpl implements _DiaryEntry {
   const _$DiaryEntryImpl(
       {required this.id,
       required this.rawText,
-      required this.correctedText,
+      required this.title,
       required this.emotion,
       required final List<String> tags,
+      final List<String> people = const [],
+      final List<String> places = const [],
+      this.correctedText,
       required this.createdAt})
-      : _tags = tags;
+      : _tags = tags,
+        _people = people,
+        _places = places;
 
   factory _$DiaryEntryImpl.fromJson(Map<String, dynamic> json) =>
       _$$DiaryEntryImplFromJson(json);
@@ -181,7 +225,7 @@ class _$DiaryEntryImpl implements _DiaryEntry {
   @override
   final String rawText;
   @override
-  final String correctedText;
+  final String title;
   @override
   final String emotion;
   final List<String> _tags;
@@ -192,12 +236,32 @@ class _$DiaryEntryImpl implements _DiaryEntry {
     return EqualUnmodifiableListView(_tags);
   }
 
+  final List<String> _people;
+  @override
+  @JsonKey()
+  List<String> get people {
+    if (_people is EqualUnmodifiableListView) return _people;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_people);
+  }
+
+  final List<String> _places;
+  @override
+  @JsonKey()
+  List<String> get places {
+    if (_places is EqualUnmodifiableListView) return _places;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_places);
+  }
+
+  @override
+  final String? correctedText;
   @override
   final DateTime createdAt;
 
   @override
   String toString() {
-    return 'DiaryEntry(id: $id, rawText: $rawText, correctedText: $correctedText, emotion: $emotion, tags: $tags, createdAt: $createdAt)';
+    return 'DiaryEntry(id: $id, rawText: $rawText, title: $title, emotion: $emotion, tags: $tags, people: $people, places: $places, correctedText: $correctedText, createdAt: $createdAt)';
   }
 
   @override
@@ -207,18 +271,30 @@ class _$DiaryEntryImpl implements _DiaryEntry {
             other is _$DiaryEntryImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.rawText, rawText) || other.rawText == rawText) &&
-            (identical(other.correctedText, correctedText) ||
-                other.correctedText == correctedText) &&
+            (identical(other.title, title) || other.title == title) &&
             (identical(other.emotion, emotion) || other.emotion == emotion) &&
             const DeepCollectionEquality().equals(other._tags, _tags) &&
+            const DeepCollectionEquality().equals(other._people, _people) &&
+            const DeepCollectionEquality().equals(other._places, _places) &&
+            (identical(other.correctedText, correctedText) ||
+                other.correctedText == correctedText) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, rawText, correctedText,
-      emotion, const DeepCollectionEquality().hash(_tags), createdAt);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      rawText,
+      title,
+      emotion,
+      const DeepCollectionEquality().hash(_tags),
+      const DeepCollectionEquality().hash(_people),
+      const DeepCollectionEquality().hash(_places),
+      correctedText,
+      createdAt);
 
   @JsonKey(ignore: true)
   @override
@@ -238,9 +314,12 @@ abstract class _DiaryEntry implements DiaryEntry {
   const factory _DiaryEntry(
       {required final int id,
       required final String rawText,
-      required final String correctedText,
+      required final String title,
       required final String emotion,
       required final List<String> tags,
+      final List<String> people,
+      final List<String> places,
+      final String? correctedText,
       required final DateTime createdAt}) = _$DiaryEntryImpl;
 
   factory _DiaryEntry.fromJson(Map<String, dynamic> json) =
@@ -251,11 +330,17 @@ abstract class _DiaryEntry implements DiaryEntry {
   @override
   String get rawText;
   @override
-  String get correctedText;
+  String get title;
   @override
   String get emotion;
   @override
   List<String> get tags;
+  @override
+  List<String> get people;
+  @override
+  List<String> get places;
+  @override
+  String? get correctedText;
   @override
   DateTime get createdAt;
   @override

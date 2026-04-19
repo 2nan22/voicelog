@@ -33,15 +33,30 @@ const DiaryEntryDocumentSchema = CollectionSchema(
       name: r'emotion',
       type: IsarType.string,
     ),
-    r'rawText': PropertySchema(
+    r'people': PropertySchema(
       id: 3,
+      name: r'people',
+      type: IsarType.stringList,
+    ),
+    r'places': PropertySchema(
+      id: 4,
+      name: r'places',
+      type: IsarType.stringList,
+    ),
+    r'rawText': PropertySchema(
+      id: 5,
       name: r'rawText',
       type: IsarType.string,
     ),
     r'tags': PropertySchema(
-      id: 4,
+      id: 6,
       name: r'tags',
       type: IsarType.stringList,
+    ),
+    r'title': PropertySchema(
+      id: 7,
+      name: r'title',
+      type: IsarType.string,
     )
   },
   estimateSize: _diaryEntryDocumentEstimateSize,
@@ -64,8 +79,27 @@ int _diaryEntryDocumentEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.correctedText.length * 3;
+  {
+    final value = object.correctedText;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.emotion.length * 3;
+  bytesCount += 3 + object.people.length * 3;
+  {
+    for (var i = 0; i < object.people.length; i++) {
+      final value = object.people[i];
+      bytesCount += value.length * 3;
+    }
+  }
+  bytesCount += 3 + object.places.length * 3;
+  {
+    for (var i = 0; i < object.places.length; i++) {
+      final value = object.places[i];
+      bytesCount += value.length * 3;
+    }
+  }
   bytesCount += 3 + object.rawText.length * 3;
   bytesCount += 3 + object.tags.length * 3;
   {
@@ -74,6 +108,7 @@ int _diaryEntryDocumentEstimateSize(
       bytesCount += value.length * 3;
     }
   }
+  bytesCount += 3 + object.title.length * 3;
   return bytesCount;
 }
 
@@ -86,8 +121,11 @@ void _diaryEntryDocumentSerialize(
   writer.writeString(offsets[0], object.correctedText);
   writer.writeDateTime(offsets[1], object.createdAt);
   writer.writeString(offsets[2], object.emotion);
-  writer.writeString(offsets[3], object.rawText);
-  writer.writeStringList(offsets[4], object.tags);
+  writer.writeStringList(offsets[3], object.people);
+  writer.writeStringList(offsets[4], object.places);
+  writer.writeString(offsets[5], object.rawText);
+  writer.writeStringList(offsets[6], object.tags);
+  writer.writeString(offsets[7], object.title);
 }
 
 DiaryEntryDocument _diaryEntryDocumentDeserialize(
@@ -97,12 +135,15 @@ DiaryEntryDocument _diaryEntryDocumentDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = DiaryEntryDocument();
-  object.correctedText = reader.readString(offsets[0]);
+  object.correctedText = reader.readStringOrNull(offsets[0]);
   object.createdAt = reader.readDateTime(offsets[1]);
   object.emotion = reader.readString(offsets[2]);
   object.id = id;
-  object.rawText = reader.readString(offsets[3]);
-  object.tags = reader.readStringList(offsets[4]) ?? [];
+  object.people = reader.readStringList(offsets[3]) ?? [];
+  object.places = reader.readStringList(offsets[4]) ?? [];
+  object.rawText = reader.readString(offsets[5]);
+  object.tags = reader.readStringList(offsets[6]) ?? [];
+  object.title = reader.readString(offsets[7]);
   return object;
 }
 
@@ -114,15 +155,21 @@ P _diaryEntryDocumentDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 1:
       return (reader.readDateTime(offset)) as P;
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     case 4:
       return (reader.readStringList(offset) ?? []) as P;
+    case 5:
+      return (reader.readString(offset)) as P;
+    case 6:
+      return (reader.readStringList(offset) ?? []) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -225,8 +272,26 @@ extension DiaryEntryDocumentQueryWhere
 extension DiaryEntryDocumentQueryFilter
     on QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QFilterCondition> {
   QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      correctedTextIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'correctedText',
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      correctedTextIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'correctedText',
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
       correctedTextEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -240,7 +305,7 @@ extension DiaryEntryDocumentQueryFilter
 
   QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
       correctedTextGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -256,7 +321,7 @@ extension DiaryEntryDocumentQueryFilter
 
   QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
       correctedTextLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -272,8 +337,8 @@ extension DiaryEntryDocumentQueryFilter
 
   QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
       correctedTextBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -605,6 +670,456 @@ extension DiaryEntryDocumentQueryFilter
         upper: upper,
         includeUpper: includeUpper,
       ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'people',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'people',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'people',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'people',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'people',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'people',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'people',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'people',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'people',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'people',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'people',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'people',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'people',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'people',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'people',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      peopleLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'people',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'places',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'places',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'places',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'places',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'places',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'places',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'places',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'places',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'places',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'places',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'places',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'places',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'places',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'places',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'places',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      placesLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'places',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
     });
   }
 
@@ -968,6 +1483,142 @@ extension DiaryEntryDocumentQueryFilter
       );
     });
   }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      titleEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      titleGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      titleLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      titleBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'title',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      titleStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      titleEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      titleContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      titleMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'title',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      titleIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'title',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterFilterCondition>
+      titleIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'title',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension DiaryEntryDocumentQueryObject
@@ -1031,6 +1682,20 @@ extension DiaryEntryDocumentQuerySortBy
       sortByRawTextDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rawText', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterSortBy>
+      sortByTitle() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'title', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterSortBy>
+      sortByTitleDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'title', Sort.desc);
     });
   }
 }
@@ -1106,6 +1771,20 @@ extension DiaryEntryDocumentQuerySortThenBy
       return query.addSortBy(r'rawText', Sort.desc);
     });
   }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterSortBy>
+      thenByTitle() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'title', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QAfterSortBy>
+      thenByTitleDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'title', Sort.desc);
+    });
+  }
 }
 
 extension DiaryEntryDocumentQueryWhereDistinct
@@ -1133,6 +1812,20 @@ extension DiaryEntryDocumentQueryWhereDistinct
   }
 
   QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QDistinct>
+      distinctByPeople() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'people');
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QDistinct>
+      distinctByPlaces() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'places');
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QDistinct>
       distinctByRawText({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'rawText', caseSensitive: caseSensitive);
@@ -1145,6 +1838,13 @@ extension DiaryEntryDocumentQueryWhereDistinct
       return query.addDistinctBy(r'tags');
     });
   }
+
+  QueryBuilder<DiaryEntryDocument, DiaryEntryDocument, QDistinct>
+      distinctByTitle({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'title', caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension DiaryEntryDocumentQueryProperty
@@ -1155,7 +1855,7 @@ extension DiaryEntryDocumentQueryProperty
     });
   }
 
-  QueryBuilder<DiaryEntryDocument, String, QQueryOperations>
+  QueryBuilder<DiaryEntryDocument, String?, QQueryOperations>
       correctedTextProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'correctedText');
@@ -1175,6 +1875,20 @@ extension DiaryEntryDocumentQueryProperty
     });
   }
 
+  QueryBuilder<DiaryEntryDocument, List<String>, QQueryOperations>
+      peopleProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'people');
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, List<String>, QQueryOperations>
+      placesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'places');
+    });
+  }
+
   QueryBuilder<DiaryEntryDocument, String, QQueryOperations> rawTextProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'rawText');
@@ -1185,6 +1899,12 @@ extension DiaryEntryDocumentQueryProperty
       tagsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'tags');
+    });
+  }
+
+  QueryBuilder<DiaryEntryDocument, String, QQueryOperations> titleProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'title');
     });
   }
 }

@@ -18,6 +18,7 @@ class SettingsNotifier extends _$SettingsNotifier {
       writingStyle: styleIdx >= 0 && styleIdx < WritingStyle.values.length
           ? WritingStyle.values[styleIdx]
           : WritingStyle.diary,
+      correctionEnabled: doc?.correctionEnabled ?? false,
     );
   }
 
@@ -38,8 +39,21 @@ class SettingsNotifier extends _$SettingsNotifier {
     final doc = AppSettingsDocument()
       ..id = 0
       ..isDarkMode = current.isDarkMode
-      ..writingStyleIndex = value.index;
+      ..writingStyleIndex = value.index
+      ..correctionEnabled = current.correctionEnabled;
     await isar.writeTxn(() => isar.appSettingsDocuments.put(doc));
     state = AsyncData(current.copyWith(writingStyle: value));
+  }
+
+  Future<void> setCorrectionEnabled(bool value) async {
+    final current = await future;
+    final isar = await ref.read(isarProvider.future);
+    final doc = AppSettingsDocument()
+      ..id = 0
+      ..isDarkMode = current.isDarkMode
+      ..writingStyleIndex = current.writingStyle.index
+      ..correctionEnabled = value;
+    await isar.writeTxn(() => isar.appSettingsDocuments.put(doc));
+    state = AsyncData(current.copyWith(correctionEnabled: value));
   }
 }

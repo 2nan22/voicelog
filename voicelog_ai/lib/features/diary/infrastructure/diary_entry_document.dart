@@ -9,18 +9,24 @@ part 'diary_entry_document.g.dart';
 class DiaryEntryDocument {
   Id id = Isar.autoIncrement;
   late String rawText;
-  late String correctedText;
+  late String title;
   late String emotion;
   late List<String> tags;
+  late List<String> people;
+  late List<String> places;
+  String? correctedText;
   late DateTime createdAt;
 
   /// Isar 문서 → 도메인 모델 변환
   DiaryEntry toDomain() => DiaryEntry(
         id: id,
         rawText: rawText,
-        correctedText: correctedText,
-        emotion: emotion,
+        title: title.isEmpty ? '제목 없음' : title,
+        emotion: emotion.isEmpty ? '평온' : emotion,
         tags: tags,
+        people: people,
+        places: places,
+        correctedText: correctedText?.isEmpty == true ? null : correctedText,
         createdAt: createdAt,
       );
 
@@ -28,11 +34,13 @@ class DiaryEntryDocument {
   static DiaryEntryDocument fromDomain(DiaryEntry entry) {
     final doc = DiaryEntryDocument()
       ..rawText = entry.rawText
-      ..correctedText = entry.correctedText
+      ..title = entry.title
       ..emotion = entry.emotion
       ..tags = entry.tags
+      ..people = entry.people
+      ..places = entry.places
+      ..correctedText = entry.correctedText
       ..createdAt = entry.createdAt;
-    // id가 유효한 경우(기존 항목 업데이트)에만 id를 설정
     if (entry.id > 0) doc.id = entry.id;
     return doc;
   }
