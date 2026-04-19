@@ -25,7 +25,7 @@ final diaryByDateProvider =
 
 typedef DiaryByDateRef
     = AutoDisposeFutureProviderRef<Map<DateTime, List<DiaryEntry>>>;
-String _$diaryListNotifierHash() => r'5fdae80547299509a8f1e5860adcdf7b28ddac3b';
+String _$diaryListNotifierHash() => r'271f17fb55190da080f8e68e22c90ee398e61731';
 
 /// See also [DiaryListNotifier].
 @ProviderFor(DiaryListNotifier)

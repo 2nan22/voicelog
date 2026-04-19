@@ -38,6 +38,17 @@ class DiaryListNotifier extends _$DiaryListNotifier {
     }
   }
 
+  Future<void> updateEntry(DiaryEntry entry) async {
+    try {
+      final repo = await ref.read(diaryRepositoryProvider.future);
+      await repo.save(entry);
+      ref.invalidateSelf();
+    } catch (e) {
+      AppLogger.error('일기 업데이트 실패', e);
+      rethrow;
+    }
+  }
+
   Future<void> deleteEntry(int id) async {
     try {
       final repo = await ref.read(diaryRepositoryProvider.future);

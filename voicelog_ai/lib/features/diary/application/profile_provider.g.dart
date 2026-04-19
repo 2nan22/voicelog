@@ -6,7 +6,7 @@ part of 'profile_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$appStatsHash() => r'e4538632a15ada1936c341db4fd827966e25c8b0';
+String _$appStatsHash() => r'fa41f40809e89b4d607a85a5b4e575d76c6e7def';
 
 /// 프로필 화면에서 사용하는 앱 통계 집계.
 ///

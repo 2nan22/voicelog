@@ -7,8 +7,11 @@ import 'package:go_router/go_router.dart';
 import 'package:voicelog_ai/core/constants/strings.dart';
 import 'package:voicelog_ai/core/extensions/datetime_ext.dart';
 import 'package:voicelog_ai/core/theme/app_colors.dart';
+import 'package:voicelog_ai/features/diary/application/diary_detail_llm_provider.dart';
 import 'package:voicelog_ai/features/diary/application/diary_list_provider.dart';
 import 'package:voicelog_ai/features/diary/domain/diary_entry.dart';
+import 'package:voicelog_ai/features/settings/application/settings_provider.dart';
+import 'package:voicelog_ai/features/settings/domain/app_settings.dart';
 
 /// 일기 상세 화면 — Stitch v0.0.2 에디토리얼 레이아웃.
 ///
@@ -87,6 +90,17 @@ class _DiaryDetailBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final topPadding = MediaQuery.of(context).padding.top;
+    final llmState = ref.watch(diaryDetailLlmNotifierProvider(entry.id));
+    final writingStyle =
+        ref.watch(settingsNotifierProvider).valueOrNull?.writingStyle ?? WritingStyle.diary;
+
+    ref.listen(diaryDetailLlmNotifierProvider(entry.id), (prev, next) {
+      if (next.phase == DetailLlmPhase.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('AI 처리에 실패했어요. 다시 시도해 주세요.')),
+        );
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -103,24 +117,35 @@ class _DiaryDetailBody extends ConsumerWidget {
           top: topPadding + 64 + 32,
           left: 24,
           right: 24,
-          bottom: 64,
+          bottom: 32,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 에디토리얼 헤더 (소제목 + 대제목 + 태그 행)
             _EditorialHeader(entry: entry, emotionColor: _emotionColor),
             const SizedBox(height: 40),
-            // 감정·키워드 2열 그리드
             _EmotionKeywordGrid(entry: entry, emotionColor: _emotionColor),
+            if (entry.people.isNotEmpty || entry.places.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _PeoplePlacesRow(entry: entry),
+            ],
             const SizedBox(height: 40),
-            // 본문 prose
             _ProseBody(text: entry.correctedText ?? entry.rawText),
             const SizedBox(height: 40),
-            // 원본 텍스트 토글 카드
             _OriginalTextSection(rawText: entry.rawText),
+            const SizedBox(height: 16),
           ],
         ),
+      ),
+      bottomNavigationBar: _DetailActionBar(
+        entry: entry,
+        llmState: llmState,
+        onReanalyze: () => ref
+            .read(diaryDetailLlmNotifierProvider(entry.id).notifier)
+            .reExtractMetadata(entry),
+        onCorrect: () => ref
+            .read(diaryDetailLlmNotifierProvider(entry.id).notifier)
+            .runCorrection(entry, writingStyle),
       ),
     );
   }
@@ -585,6 +610,150 @@ class _OriginalTextSectionState extends State<_OriginalTextSection> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─── 인물·장소 칩 행 ──────────────────────────────────────────────────────────
+
+class _PeoplePlacesRow extends StatelessWidget {
+  const _PeoplePlacesRow({required this.entry});
+
+  final DiaryEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        ...entry.people.map(
+          (p) => _InfoChip(
+            icon: Icons.person_outline_rounded,
+            label: p,
+            color: scheme.tertiary,
+          ),
+        ),
+        ...entry.places.map(
+          (p) => _InfoChip(
+            icon: Icons.place_outlined,
+            label: p,
+            color: scheme.secondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── 하단 AI 액션 바 ──────────────────────────────────────────────────────────
+
+class _DetailActionBar extends StatelessWidget {
+  const _DetailActionBar({
+    required this.entry,
+    required this.llmState,
+    required this.onReanalyze,
+    required this.onCorrect,
+  });
+
+  final DiaryEntry entry;
+  final DetailLlmState llmState;
+  final VoidCallback onReanalyze;
+  final VoidCallback onCorrect;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final scheme = Theme.of(context).colorScheme;
+    final isRunning = llmState.phase == DetailLlmPhase.running;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + bottomPadding),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(
+            color: AppColors.outlineVariant.withValues(alpha: 0.5),
+          ),
+        ),
+      ),
+      child: isRunning
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                LinearProgressIndicator(
+                  backgroundColor: scheme.surfaceContainerHighest,
+                  color: scheme.primary,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'AI 분석 중...',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onReanalyze,
+                    icon: const Icon(Icons.auto_awesome_rounded, size: 16),
+                    label: const Text('AI 재분석'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: onCorrect,
+                    icon: const Icon(Icons.edit_rounded, size: 16),
+                    label: Text(entry.correctedText != null ? '재보정' : '보정하기'),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }
