@@ -2,33 +2,52 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'llm_response_parser.freezed.dart';
 
+/// 메타데이터 추출 결과
 @freezed
-class LlmParsedResult with _$LlmParsedResult {
-  const factory LlmParsedResult({
-    required String correctedText,
+class LlmMetadataResult with _$LlmMetadataResult {
+  const factory LlmMetadataResult({
+    required String title,
     required String emotion,
     required List<String> tags,
-  }) = _LlmParsedResult;
+    required List<String> people,
+    required List<String> places,
+  }) = _LlmMetadataResult;
 }
 
-/// LLM 응답 문자열을 파싱하여 [LlmParsedResult]를 반환한다.
-/// 파싱 실패 시 기본값(빈 문자열, '평온', 빈 목록)을 반환한다.
 class LlmResponseParser {
   LlmResponseParser._();
 
-  static LlmParsedResult parse(String rawResponse) {
-    final correctedMatch =
-        RegExp(r'\[보정본\](.*?)(?=\[감정\]|\[태그\]|$)', dotAll: true)
-            .firstMatch(rawResponse);
-    final emotionMatch =
-        RegExp(r'\[감정\]\s*(\S+)').firstMatch(rawResponse);
-    final tagsMatch =
-        RegExp(r'\[태그\]\s*(.+)').firstMatch(rawResponse);
+  /// 메타데이터 추출 응답 파싱. 파싱 실패 시 기본값 반환.
+  static LlmMetadataResult parseMetadata(String raw) {
+    String extract(String tag) {
+      final m = RegExp('\\[$tag\\]\\s*(.+)', dotAll: false).firstMatch(raw);
+      return m?.group(1)?.trim() ?? '';
+    }
 
-    return LlmParsedResult(
-      correctedText: correctedMatch?.group(1)?.trim() ?? '',
-      emotion: emotionMatch?.group(1)?.trim() ?? '평온',
-      tags: tagsMatch?.group(1)?.split(',').map((t) => t.trim()).toList() ?? [],
+    List<String> toList(String tag) {
+      final val = extract(tag);
+      if (val.isEmpty || val == '없음') return [];
+      return val.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    }
+
+    final title = extract('제목');
+    return LlmMetadataResult(
+      title: title.isEmpty ? '제목 없음' : title,
+      emotion: _validEmotion(extract('감정')),
+      tags: toList('태그'),
+      people: toList('인물'),
+      places: toList('장소'),
     );
+  }
+
+  /// 보정본 응답 파싱. [보정본] 태그 이후 텍스트 반환.
+  static String parseCorrectedText(String raw) {
+    final m = RegExp(r'\[보정본\]\s*(.+)', dotAll: true).firstMatch(raw);
+    return m?.group(1)?.trim() ?? '';
+  }
+
+  static String _validEmotion(String raw) {
+    const valid = ['기쁨', '슬픔', '평온', '화남'];
+    return valid.contains(raw) ? raw : '평온';
   }
 }

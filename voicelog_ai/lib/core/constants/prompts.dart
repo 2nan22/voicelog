@@ -16,24 +16,40 @@ const String kModelFileName = 'Qwen2.5-1.5B-Instruct_q8.task';
 const String kModelSubDir = 'models';
 
 // ── 문체별 프롬프트 지시문 ────────────────────────────────────────────────────
-/// 문체별 보정 지시문. kDiaryProcessingPrompt의 {style_instruction} 자리에 치환.
+/// 문체별 보정 지시문. kCorrectionPrompt의 {style_instruction} 자리에 치환.
 const Map<WritingStyle, String> kWritingStyleInstructions = {
   WritingStyle.diary:  '자연스러운 1인칭 독백 일기체로',
   WritingStyle.memo:   '핵심만 간결하게 메모체로',
   WritingStyle.letter: '따뜻하고 감성적인 편지체로',
 };
 
-/// 일기 보정 및 감정/태그 추출 프롬프트 (Qwen2.5 채팅 포맷).
-/// {style_instruction} 자리에 문체 지시문을, {raw_text} 자리에 STT 원문을 치환하여 사용한다.
-const String kDiaryProcessingPrompt = '''
+/// 메타데이터 추출 프롬프트 — 항상 실행. 보정 없이 구조화 정보만 추출.
+/// {raw_text} 자리에 STT 원문을 치환한다.
+const String kMetadataExtractionPrompt = '''
 <|im_start|>user
-당신은 일기 정리 비서입니다. 아래 텍스트를 {style_instruction} 수정하고,
-감정(기쁨/슬픔/평온/화남)과 키워드 3개를 추출하세요.
-응답 형식:
-[보정본] 내용...
-[감정] 감정값
-[태그] #키워드1, #키워드2, #키워드3
+아래 음성 일기 텍스트에서 정보를 추출하세요.
+응답은 반드시 아래 형식만 사용하고 설명을 추가하지 마세요.
 
-입력: {raw_text}<|im_end|>
+[제목] 한 줄 제목 (20자 이내)
+[감정] 기쁨 또는 슬픔 또는 평온 또는 화남 중 하나
+[태그] #키워드1, #키워드2, #키워드3
+[인물] 이름1, 이름2 (없으면 없음)
+[장소] 장소1, 장소2 (없으면 없음)
+
+텍스트: {raw_text}<|im_end|>
+<|im_start|>assistant
+''';
+
+/// 문맥 보정 프롬프트 — 설정에서 활성화 시에만 실행.
+/// {style_instruction} 과 {raw_text} 를 치환한다.
+const String kCorrectionPrompt = '''
+<|im_start|>user
+아래 음성 일기 텍스트를 {style_instruction} 수정하세요.
+오탈자와 어색한 표현만 최소한으로 수정하고 내용은 바꾸지 마세요.
+[보정본] 태그로 시작해서 보정된 텍스트만 출력하세요.
+
+[보정본] 보정된 내용...
+
+텍스트: {raw_text}<|im_end|>
 <|im_start|>assistant
 ''';
